@@ -300,10 +300,21 @@ export class Router implements IRouter {
       if (LegacyOpenSearchErrorHelpers.isNotAuthorizedError(e)) {
         return e;
       }
+
+      if (isDataSourceConfigError(e)) {
+        return hapiResponseAdapter.handle(
+          opensearchDashboardsResponseFactory.badRequest({ body: e.message })
+        );
+      }
+
       return hapiResponseAdapter.toInternalError();
     }
   }
 }
+
+const isDataSourceConfigError = (error: any) => {
+  return error.constructor.name === 'DataSourceConfigError' && error.statusCode === 400;
+};
 
 const convertOpenSearchUnauthorized = (
   e: OpenSearchNotAuthorizedError
