@@ -116,11 +116,24 @@ export class SearchInterceptor {
     strategy?: string
   ): Observable<IOpenSearchDashboardsSearchResponse> {
     const { id, ...searchRequest } = request;
+    console.log(id);
     const path = trimEnd(
       `/internal/search/${strategy || OPENSEARCH_SEARCH_STRATEGY}/${id || ''}`,
       '/'
     );
+    const pit_object = `{
+      "pit": {
+        "id": "o463QQErb3BlbnNlYXJjaF9kYXNoYm9hcmRzX3NhbXBsZV9kYXRhX2Vjb21tZXJjZRZiU3h5azg4dlEyeTBFSVFuUjdnTTlnABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAAfFkZxM2IweWVnU1VtX2JNejBsaEMxcXcBFmJTeHlrODh2UTJ5MEVJUW5SN2dNOWcAAA==",
+        "keep_alive": "1m"
+      }
+    }`;
+    const pit_json = JSON.parse(pit_object);
+    searchRequest.params.body = { ...searchRequest.params.body, ...pit_json };
+    delete searchRequest.params.index;
+    delete searchRequest.params.ignore_unavailable;
+    // delete searchRequest.params.preference;
     const body = JSON.stringify(searchRequest);
+    console.log("body at interceptor", body)
     return from(
       this.deps.http.fetch({
         method: 'POST',
@@ -208,7 +221,7 @@ export class SearchInterceptor {
       if (options?.abortSignal?.aborted) {
         return throwError(new AbortError());
       }
-
+      console.log("This is the search interceptor in the search ")
       const { timeoutSignal, combinedSignal, cleanup } = this.setupAbortSignal({
         abortSignal: options?.abortSignal,
       });

@@ -42,6 +42,7 @@ import {
   getShardTimeout,
   shimAbortSignal,
 } from '..';
+import {requiresSelectionId} from "vega-lite/build/src/compile/selection";
 
 export const opensearchSearchStrategyProvider = (
   config$: Observable<SharedGlobalConfig>,
@@ -51,6 +52,8 @@ export const opensearchSearchStrategyProvider = (
   return {
     search: async (context, request, options) => {
       logger.debug(`search ${request.params?.index}`);
+      console.log("this is the call for opensearch strategy :? ");
+      console.log(context, request, options);
       const config = await config$.pipe(first()).toPromise();
       const uiSettingsClient = await context.core.uiSettings.client;
 
@@ -62,19 +65,24 @@ export const opensearchSearchStrategyProvider = (
 
       // ignoreThrottled is not supported in OSS
       const { ignoreThrottled, ...defaultParams } = await getDefaultSearchParams(uiSettingsClient);
-
+      console.log('This the default setting ', defaultParams);
       const params = toSnakeCase({
         ...defaultParams,
         ...getShardTimeout(config),
         ...request.params,
       });
-
+      delete params.preference;
+      delete params.ignore_unavailable;
+      delete params.expand_wildcards;
+      console.log("params are these:", params);
       try {
         const promise = shimAbortSignal(
           context.core.opensearch.client.asCurrentUser.search(params),
           options?.abortSignal
         );
         const { body: rawResponse } = (await promise) as ApiResponse<SearchResponse<any>>;
+        console.log('Response');
+        console.log(rawResponse);
 
         if (usage) usage.trackSuccess(rawResponse.took);
 

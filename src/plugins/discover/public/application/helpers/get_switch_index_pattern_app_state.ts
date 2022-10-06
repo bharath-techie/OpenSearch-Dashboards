@@ -45,8 +45,10 @@ export function getSwitchIndexPatternAppState(
 ) {
   const nextColumns = modifyColumns
     ? currentColumns.filter(
-        (column) =>
-          nextIndexPattern.fields.getByName(column) || !currentIndexPattern.fields.getByName(column)
+        (column) => {
+        nextIndexPattern.fields.getByName(column) || !currentIndexPattern.fields.getByName(column)
+        }
+
       )
     : currentColumns;
   const nextSort = getSortArray(currentSort, nextIndexPattern);

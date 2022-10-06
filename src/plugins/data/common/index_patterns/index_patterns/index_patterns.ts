@@ -119,6 +119,7 @@ export class IndexPatternsService {
       fields: ['title'],
       perPage: 10000,
     });
+    console.log("this is the call for refresh saved object cache")
   }
 
   /**
@@ -127,6 +128,7 @@ export class IndexPatternsService {
    */
   getIds = async (refresh: boolean = false) => {
     if (!this.savedObjectsCache || refresh) {
+      console.log("fetching the ids")
       await this.refreshSavedObjectsCache();
     }
     if (!this.savedObjectsCache) {
@@ -141,6 +143,7 @@ export class IndexPatternsService {
    */
   getTitles = async (refresh: boolean = false): Promise<string[]> => {
     if (!this.savedObjectsCache || refresh) {
+      console.log("get tittles")
       await this.refreshSavedObjectsCache();
     }
     if (!this.savedObjectsCache) {
@@ -157,6 +160,7 @@ export class IndexPatternsService {
     refresh: boolean = false
   ): Promise<Array<{ id: string; title: string }>> => {
     if (!this.savedObjectsCache || refresh) {
+      console.log("Fetching ids with title")
       await this.refreshSavedObjectsCache();
     }
     if (!this.savedObjectsCache) {
@@ -183,6 +187,7 @@ export class IndexPatternsService {
 
   getCache = async () => {
     if (!this.savedObjectsCache) {
+      console.log("get cache saved objects")
       await this.refreshSavedObjectsCache();
     }
     return this.savedObjectsCache;
@@ -233,6 +238,7 @@ export class IndexPatternsService {
    */
   getFieldsForWildcard = async (options: GetFieldsOptions = {}) => {
     const metaFields = await this.config.get(UI_SETTINGS.META_FIELDS);
+    console.log("fetching the value from the wildard values")
     return this.apiClient.getFieldsForWildcard({
       pattern: options.pattern,
       metaFields,
@@ -248,13 +254,16 @@ export class IndexPatternsService {
   getFieldsForIndexPattern = async (
     indexPattern: IndexPattern | IndexPatternSpec,
     options: GetFieldsOptions = {}
-  ) =>
-    this.getFieldsForWildcard({
+  ) => {
+    console.log(indexPattern.title)
+    return this.getFieldsForWildcard({
       pattern: indexPattern.title as string,
       ...options,
       type: indexPattern.type,
       params: indexPattern.typeMeta && indexPattern.typeMeta.params,
     });
+  }
+
 
   /**
    * Refresh field list for a given index pattern
@@ -263,6 +272,7 @@ export class IndexPatternsService {
   refreshFields = async (indexPattern: IndexPattern) => {
     try {
       const fields = await this.getFieldsForIndexPattern(indexPattern);
+      console.log("Fetching the fields from the Index patterns")
       const scripted = indexPattern.getScriptedFields().map((field) => field.spec);
       indexPattern.fields.replaceAll([...fields, ...scripted]);
     } catch (err) {
@@ -518,6 +528,7 @@ export class IndexPatternsService {
   }
 
   find = async (search: string, size: number = 10): Promise<IndexPattern[]> => {
+    console.log("finding the search")
     const savedObjects = await this.savedObjectsClient.find<IndexPatternSavedObjectAttrs>({
       type: 'index-pattern',
       fields: ['title'],

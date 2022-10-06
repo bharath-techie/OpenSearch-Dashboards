@@ -208,7 +208,9 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   let inspectorRequest;
   const savedSearch = $route.current.locals.savedObjects.savedSearch;
   $scope.searchSource = savedSearch.searchSource;
+  console.log($scope.searchSource);
   $scope.indexPattern = resolveIndexPatternLoading();
+  console.log($scope.indexPattern);
   //used for functional testing
   $scope.fetchCounter = 0;
 

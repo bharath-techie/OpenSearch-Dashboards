@@ -30,7 +30,7 @@
 
 import { HttpSetup } from 'src/core/public';
 import { IndexPatternMissingIndices } from '../../../common/index_patterns/lib';
-import { GetFieldsOptions, IIndexPatternsApiClient } from '../../../common/index_patterns/types';
+import { GetFieldsOptions, IIndexPatternsApiClient } from '../../../common';
 
 const API_BASE_URL: string = `/api/index_patterns/`;
 
@@ -73,7 +73,7 @@ export class IndexPatternsApiClient implements IIndexPatternsApiClient {
 
   getFieldsForWildcard(options: GetFieldsOptions = {}) {
     const { pattern, metaFields, type, params } = options;
-
+    console.log(pattern, metaFields, type, params);
     let url;
     let query;
 
@@ -91,7 +91,8 @@ export class IndexPatternsApiClient implements IIndexPatternsApiClient {
         meta_fields: metaFields,
       };
     }
-
+    console.log("This is the request for being fetched");
+    console.log(url, query);
     return this._request(url, query).then((resp: any) => resp.fields);
   }
 }

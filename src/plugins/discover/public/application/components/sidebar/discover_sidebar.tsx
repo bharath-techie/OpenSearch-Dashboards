@@ -117,7 +117,10 @@ export function DiscoverSidebar({
   );
 
   const getDetailsByField = useCallback(
-    (ipField: IndexPatternField) => getDetails(ipField, hits, columns, selectedIndexPattern),
+    (ipField: IndexPatternField) => {
+      console.log(ipField, hits, columns, selectedIndexPattern);
+      return getDetails(ipField, hits, columns, selectedIndexPattern);
+    },
     [hits, columns, selectedIndexPattern]
   );
 
