@@ -100,6 +100,19 @@ export async function getIndexPatterns(savedObjectsClient) {
     );
 }
 
+export async function getPits(client, title: string) {
+    if (title) {
+        const savedObjects = await client.find({
+            type: 'point-in-time',
+            perPage: 1000,
+            fields: ['id']
+        });
+
+        return savedObjects.savedObjects;
+    }
+}
+
+
 export async function findByTitle(client, title: string) {
     if (title) {
         const savedObjects = await client.find({
@@ -115,7 +128,9 @@ export async function findByTitle(client, title: string) {
 export async function createSavedObject(pointintime, client, reference) {
     const dupe = await findByTitle(client, pointintime.id);
     console.log(dupe);
-    throw new Error(`Duplicate Point in time: ${pointintime.id}`);
+    if(dupe) {
+        throw new Error(`Duplicate Point in time: ${pointintime.id}`);
+    }
     // if (dupe) {
     //     if (override) {
     //         await this.delete(dupe.id);
@@ -125,7 +140,7 @@ export async function createSavedObject(pointintime, client, reference) {
     // }
 
     const body = pointintime;
-    const references = [{...reference, name: "index-pattern"}];
+    const references = [{...reference}];
     const savedObjectType = "point-in-time";
     const response = await client.create(savedObjectType, body, {
         id: pointintime.id,
@@ -184,9 +199,9 @@ export const PointInTimeFlyout = () => {
     const createPointInTime = () => {
         //setIsFlyoutVisible(false);
         const pit:PointInTime = {
-            name: 'abc',
+            name: 'abc1',
             keepAlive: '24',
-            id: 'id'
+            id: 'id1'
         }
         const reference:SavedObjectReference = {
             id: indexPatterns[0].id,

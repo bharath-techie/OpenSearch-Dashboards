@@ -130,6 +130,7 @@ app.config(($routeProvider) => {
     reloadOnSearch: false,
     resolve: {
       savedObjects: function ($route, Promise) {
+        console.log("first here");
         const history = getHistory();
         const savedSearchId = $route.current.params.id;
         return data.indexPatterns.ensureDefaultIndexPattern(history).then(() => {
@@ -208,6 +209,9 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   let inspectorRequest;
   const savedSearch = $route.current.locals.savedObjects.savedSearch;
   $scope.searchSource = savedSearch.searchSource;
+  debugger;
+  console.log("controller");
+  console.log(savedSearch.searchSource)
   $scope.indexPattern = resolveIndexPatternLoading();
   //used for functional testing
   $scope.fetchCounter = 0;
@@ -490,11 +494,15 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   };
   $scope.topNavMenu = getTopNavLinks();
 
+  console.log("1: ");
+  console.log($scope.searchSource);
   $scope.searchSource
     .setField('index', $scope.indexPattern)
     .setField('highlightAll', true)
     .setField('version', true);
 
+  console.log("2 : ");
+  console.log($scope.searchSource);
   // Even when searching rollups, we want to use the default strategy so that we get back a
   // document-like response.
   $scope.searchSource.setPreferredSearchStrategyId('default');
@@ -964,6 +972,8 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
 
   $scope.updateDataSource = () => {
     const { indexPattern, searchSource } = $scope;
+    console.log("here");
+    console.log(searchSource);
     searchSource
       .setField('index', $scope.indexPattern)
       .setField('size', $scope.opts.sampleSize)
@@ -977,6 +987,7 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
       )
       .setField('query', data.query.queryString.getQuery() || null)
       .setField('filter', filterManager.getFilters());
+    console.log(searchSource);
     return Promise.resolve();
   };
 
