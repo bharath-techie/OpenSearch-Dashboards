@@ -45,7 +45,7 @@ import {
 } from '@elastic/eui';
 import { EuiSelectableProps } from '@elastic/eui/src/components/selectable/selectable';
 import {times} from "lodash";
-import { IndexPatternRef } from './types';
+import {IndexPatternRef, PointInTimeRef} from './types';
 
 export type ChangeIndexPatternTriggerProps = EuiButtonEmptyProps & {
   label: string;
@@ -56,6 +56,7 @@ export type ChangeIndexPatternTriggerProps = EuiButtonEmptyProps & {
 
 export function ChangeIndexPattern({
   indexPatternRefs,
+  pointInTimeRefs,
   indexPatternId,
   onChangeIndexPattern,
   trigger,
@@ -63,6 +64,7 @@ export function ChangeIndexPattern({
 }: {
   trigger: ChangeIndexPatternTriggerProps;
   indexPatternRefs: IndexPatternRef[];
+  pointInTimeRefs: PointInTimeRef[];
   onChangeIndexPattern: (newId: string) => void;
   indexPatternId?: string;
   selectableProps?: EuiSelectableProps;
@@ -103,6 +105,7 @@ export function ChangeIndexPattern({
 
   interface OptionData {
     value? : string | number
+    references? : any
   }
 
   const [options, setOptions] = useState<
@@ -123,12 +126,13 @@ export function ChangeIndexPattern({
       label: "Point-in-Time",
       isGroupLabel: true
     },
-    ...pointInTime.map((pit):EuiSelectableOption<OptionData> => ({
-      label: pit.name,
-      key: pit.name,
-      searchableLabel: pit.name,
-      value: pit.id,
-      checked: pit.name === indexPatternId ? 'on' : undefined,
+    ...pointInTimeRefs.map(({ title, id, references }): EuiSelectableOption<OptionData> => ({
+      label: id,
+      key: id,
+      searchableLabel: title,
+      value: id,
+      references,
+      checked: id === indexPatternId ? 'on' : undefined,
     }))
   ]);
 
@@ -161,6 +165,7 @@ export function ChangeIndexPattern({
             const choice = (choices.find(({ checked }) => checked) as unknown) as {
               value: string;
             };
+            console.log('this is the choice');
             console.log(choice);
             console.log(choices);
             onChangeIndexPattern(choice.value);

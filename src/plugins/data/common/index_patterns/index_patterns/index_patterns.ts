@@ -398,6 +398,8 @@ export class IndexPatternsService {
   get = async (id: string): Promise<IndexPattern> => {
     const cache = indexPatternCache.get(id);
     if (cache) {
+      console.log("This is in the cache");
+      console.log(cache);
       return cache;
     }
 
@@ -406,6 +408,8 @@ export class IndexPatternsService {
       id
     );
 
+    console.log("This is the saved object intially in the get call 409");
+    console.log(savedObject);
     if (!savedObject.version) {
       throw new SavedObjectNotFound(
         savedObjectType,

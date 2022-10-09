@@ -69,7 +69,6 @@ export const opensearchSearchStrategyProvider = (
         ...getShardTimeout(config),
         ...request.params,
       });
-
       try {
         const client = await decideClient(context, request);
         const promise = shimAbortSignal(client.search(params), options?.abortSignal);

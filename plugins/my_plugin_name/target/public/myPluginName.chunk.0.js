@@ -41,8 +41,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-;
-;
 async function getIndexPatterns(savedObjectsClient) {
   return savedObjectsClient.find({
     type: 'index-pattern',
@@ -81,8 +79,8 @@ async function findByTitle(client, title) {
 }
 async function createSavedObject(pointintime, client, reference) {
   const dupe = await findByTitle(client, pointintime.id);
-  console.log(dupe);
-  throw new Error(`Duplicate Point in time: ${pointintime.id}`); // if (dupe) {
+  console.log(dupe); // throw new Error(`Duplicate Point in time: ${pointintime.id}`);
+  // if (dupe) {
   //     if (override) {
   //         await this.delete(dupe.id);
   //     } else {
@@ -92,9 +90,9 @@ async function createSavedObject(pointintime, client, reference) {
 
   const body = pointintime;
   const references = [{ ...reference,
-    name: "index-pattern"
+    name: 'index-pattern'
   }];
-  const savedObjectType = "point-in-time";
+  const savedObjectType = 'point-in-time';
   const response = await client.create(savedObjectType, body, {
     id: pointintime.id,
     references
@@ -130,8 +128,8 @@ const PointInTimeFlyout = () => {
   Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
     (async function () {
       const gettedIndexPatterns = await getIndexPatterns(savedObjects.client);
-      var names = gettedIndexPatterns.map(function (item) {
-        return item['title'];
+      const names = gettedIndexPatterns.map(function (item) {
+        return item.title;
       });
       setIndexPatterns(gettedIndexPatterns);
       console.log(gettedIndexPatterns);
@@ -140,11 +138,11 @@ const PointInTimeFlyout = () => {
   }, [savedObjects.client]);
 
   const createPointInTime = () => {
-    //setIsFlyoutVisible(false);
+    // setIsFlyoutVisible(false);
     const pit = {
       name: 'abc',
       keepAlive: '24',
-      id: 'id'
+      id: 'o463QQErb3BlbnNlYXJjaF9kYXNoYm9hcmRzX3NhbXBsZV9kYXRhX2Vjb21tZXJjZRZiU3h5azg4dlEyeTBFSVFuUjdnTTlnABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAFoFmU3LVFlREkxUU11REJITnJod0ZaNkEBFmJTeHlrODh2UTJ5MEVJUW5SN2dNOWcAAA=='
     };
     const reference = {
       id: indexPatterns[0].id,
@@ -271,7 +269,7 @@ const PointInTimeFlyout = () => {
       label: "The PIT will be automatically deleted at the expiry time",
       checked: checked,
       onChange: e => onCheckboxChange(e)
-    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_elastic_eui__WEBPACK_IMPORTED_MODULE_1__["EuiSpacer"], null))); //return <EuiCodeBlock language="js">{JSON.stringify(data, null, 2)}</EuiCodeBlock>;
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_elastic_eui__WEBPACK_IMPORTED_MODULE_1__["EuiSpacer"], null))); // return <EuiCodeBlock language="js">{JSON.stringify(data, null, 2)}</EuiCodeBlock>;
   };
 
   let flyout;
@@ -290,7 +288,7 @@ const PointInTimeFlyout = () => {
       id: "savedObjectsManagement.objectsTable.flyout.importSavedObjectTitle",
       defaultMessage: "Create point in time"
     })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_elastic_eui__WEBPACK_IMPORTED_MODULE_1__["EuiFlyoutBody"], null, renderBody({
-      data: "",
+      data: '',
       isLoading: false,
       hasPrivilegeToRead: true
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_elastic_eui__WEBPACK_IMPORTED_MODULE_1__["EuiFlyoutFooter"], null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_elastic_eui__WEBPACK_IMPORTED_MODULE_1__["EuiFlexGroup"], {
