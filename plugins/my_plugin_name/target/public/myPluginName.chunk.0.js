@@ -142,7 +142,7 @@ const PointInTimeFlyout = () => {
     const pit = {
       name: 'abc',
       keepAlive: '24',
-      id: 'o463QQErb3BlbnNlYXJjaF9kYXNoYm9hcmRzX3NhbXBsZV9kYXRhX2Vjb21tZXJjZRZiU3h5azg4dlEyeTBFSVFuUjdnTTlnABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAFoFmU3LVFlREkxUU11REJITnJod0ZaNkEBFmJTeHlrODh2UTJ5MEVJUW5SN2dNOWcAAA=='
+      id: "o463QQErb3BlbnNlYXJjaF9kYXNoYm9hcmRzX3NhbXBsZV9kYXRhX2Vjb21tZXJjZRZiU3h5azg4dlEyeTBFSVFuUjdnTTlnABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAALFlgwRGNqQ1gxUk9PSXlabkxzWF9IVHcBFmJTeHlrODh2UTJ5MEVJUW5SN2dNOWcAAA=="
     };
     const reference = {
       id: indexPatterns[0].id,
