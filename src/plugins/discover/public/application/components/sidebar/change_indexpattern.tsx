@@ -71,7 +71,6 @@ export function ChangeIndexPattern({
 }) {
   const [isPopoverOpen, setPopoverIsOpen] = useState(false);
   const [isPopover2Open, setPopover2IsOpen] = useState(false);
-  const random = new Random();
   const createTrigger = function () {
     const { label, title, ...rest } = trigger;
     return (

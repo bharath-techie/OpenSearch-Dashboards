@@ -140,9 +140,9 @@ const PointInTimeFlyout = () => {
   const createPointInTime = () => {
     // setIsFlyoutVisible(false);
     const pit = {
-      name: 'abc',
+      name: 'testing',
       keepAlive: '24',
-      id: "o463QQErb3BlbnNlYXJjaF9kYXNoYm9hcmRzX3NhbXBsZV9kYXRhX2Vjb21tZXJjZRZiU3h5azg4dlEyeTBFSVFuUjdnTTlnABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAALFlgwRGNqQ1gxUk9PSXlabkxzWF9IVHcBFmJTeHlrODh2UTJ5MEVJUW5SN2dNOWcAAA=="
+      id: "o463QQEKdGVzdF9pbmRleBZnSG5VR0dKWVJybW1QZzJRNzJ0YU1RABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAGNFkE1NXgtM3JLUjJxdExXc0lzd3lQQ2cBFmdIblVHR0pZUnJtbVBnMlE3MnRhTVEAAA=="
     };
     const reference = {
       id: indexPatterns[0].id,

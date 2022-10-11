@@ -104,28 +104,27 @@ const fetchStatuses = {
 const app = getAngularModule();
 
 export async function getpits(savedObjectsClient) {
-  return savedObjectsClient
-    .find({
-      type: 'point-in-time',
-      perPage: 10000,
-    })
-    .then((response) =>
-      response.savedObjects
-        .map((pattern) => {
+
+  return savedObjectsClient.find({
+        type: 'point-in-time',
+        perPage: 10000,
+      }).then((response) =>
+        response.savedObjects
+          .map((pattern) => {
             return {
               ...pattern,
-          };
-        })
-        .sort((a, b) => {
-          if (a.sort < b.sort) {
-            return -1;
-          } else if (a.sort > b.sort) {
-            return 1;
-          } else {
-            return 0;
-          }
-        })
-    ) || []
+            };
+          })
+          .sort((a, b) => {
+            if (a.sort < b.sort) {
+              return -1;
+            } else if (a.sort > b.sort) {
+              return 1;
+            } else {
+              return 0;
+            }
+          })
+      ) || []
 }
 
 app.config(($routeProvider) => {
@@ -159,8 +158,10 @@ app.config(($routeProvider) => {
         const history = getHistory();
         const savedSearchId = $route.current.params.id;
         return await data.indexPatterns.ensureDefaultIndexPattern(history).then(async () => {
+
           const { appStateContainer } = getState({ history });
-          const { index } = appStateContainer.getState();
+          const { index, pitid } = appStateContainer.getState();
+          debugger;
           return await Promise.props({
             ip: await indexPatterns.getCache().then(async (indexPatternList) => {
               /**
@@ -180,7 +181,10 @@ app.config(($routeProvider) => {
                 stateValFound: !!index && id === index,
               });
             }),
-            pit: await getpits(savedObjectsClient),
+            pit: await Promise.props({
+              list: await getpits(savedObjectsClient, history),
+              pitid: pitid,
+            }),
             savedSearch: await getServices()
               .getSavedSearchById(savedSearchId)
               .then((savedSearch) => {
@@ -237,9 +241,10 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   let inspectorRequest;
   const savedSearch = $route.current.locals.savedObjects.savedSearch;
   $scope.searchSource = savedSearch.searchSource;
-  $scope.selectedPointInTime = null;
   // console.log("This is the search store",$scope.searchSource);
   $scope.indexPattern = resolveIndexPatternLoading();
+  $scope.selectedPointInTime = $route.current.locals.savedObjects.pit.pitid || undefined;
+  debugger;
   // console.log($scope.indexPattern);
   //used for functional testing
   $scope.fetchCounter = 0;
@@ -328,8 +333,7 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   $scope.setIndexPattern = async (id) => {
     try {
       const nextIndexPattern = await indexPatterns.get(id);
-      // console.log("This is IndexPatternObject");
-      // console.log($scope.indexPattern);
+      debugger;
       if (nextIndexPattern) {
         const nextAppState = getSwitchIndexPatternAppState(
           $scope.indexPattern,
@@ -339,33 +343,44 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
           config.get(MODIFY_COLUMNS_ON_SWITCH)
         );
         await replaceUrlAppState(nextAppState);
+        debugger;
         $route.reload();
       }
     } catch (e) {
-      console.log("This is a PIT");
-       // console.log("This is teh pit list", $route.current.locals.savedObjects.pit);
-      const pitList = await $route.current.locals.savedObjects.pit;
-      const nextPit = pitList.find((pit) => (pit.id === id));
-
-
-      const nextAppState = getSwitchIndexPatternAppState(
-        $scope.indexPattern,
-        nextPit,
-        $scope.state.columns,
-        $scope.state.sort,
-        config.get(MODIFY_COLUMNS_ON_SWITCH)
-      );
-      await replaceUrlAppState(nextAppState);
-      $route.reload();
-      console.log(nextPit);
+      // console.log("This is a PIT");
+      //  // console.log("This is teh pit list", $route.current.locals.savedObjects.pit);
+      // const pitList = await $route.current.locals.savedObjects.pit;
+      // const nextPit = pitList.find((pit) => (pit.id === id));
+      //
+      //
+      // const nextAppState = getSwitchIndexPatternAppState(
+      //   $scope.indexPattern,
+      //   nextPit,
+      //   $scope.state.columns,
+      //   $scope.state.sort,
+      //   config.get(MODIFY_COLUMNS_ON_SWITCH)
+      // );
+      // await replaceUrlAppState(nextAppState);
+      // $route.reload();
+      // console.log(nextPit);
     }
   };
 
   $scope.setPointInTime = async (id) => {
-    console.log("This is teh pit list", $route.current.locals.savedObjects.pit);
-    const pitList = await $route.current.locals.savedObjects.pit;
-    let nextPit = pitList.find((pit) => (pit.id === id));
+    console.log('This is teh pit list', $route.current.locals.savedObjects.pit.list);
+    const pitList = await $route.current.locals.savedObjects.pit.list;
+    const nextPit = pitList.find((pit) => pit.id === id);
     console.log(nextPit);
+    debugger;
+    const nextAppState = getSwitchIndexPatternAppState(
+      $scope.indexPattern,
+      nextPit,
+      $scope.state.columns,
+      $scope.state.sort,
+      config.get(MODIFY_COLUMNS_ON_SWITCH)
+    );
+    await replaceUrlAppState(nextAppState);
+    await $route.reload();
   };
   // update data source when filters update
   subscriptions.add(
@@ -663,7 +678,9 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   };
 
   function getStateDefaults() {
-    const query = $scope.searchSource.getField('query') || data.query.queryString.getDefaultQuery();
+    // const query = $scope.searchSource.getField('query') || data.query.queryString.getDefaultQuery();
+    const query = $scope.searchSource.getField('query');
+    debugger;
     return {
       query,
       sort: getSortArray(savedSearch.sort, $scope.indexPattern),
@@ -686,7 +703,7 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
     timefield: getTimeField(),
     savedSearch: savedSearch,
     indexPatternList: $route.current.locals.savedObjects.ip.list,
-    pointInTimeList: $route.current.locals.savedObjects.pit,
+    pointInTimeList: $route.current.locals.savedObjects.pit.list,
     config: config,
     fixedScroll: createFixedScroll($scope, $timeout),
     setHeaderActionMenu: getHeaderActionMenuMounter(),
@@ -864,45 +881,67 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
     // Abort any in-progress requests before fetching again
     if (abortController) abortController.abort();
     abortController = new AbortController();
-
-    $scope
-      .updateDataSource()
-      .then(setupVisualization)
-      .then(async function () {
-        $scope.fetchStatus = fetchStatuses.LOADING;
-        logInspectorRequest();
-        // eslint-disable-next-line camelcase
-        let search_source_local = _.cloneDeep($scope.searchSource);
-        // search_source_local = $scope.searchSource;
-        console.log("This is the local search source");
-        const pit_object = `{
+    debugger;
+    if ($scope.selectedPointInTime != null) {
+      console.log('There is a selected Point in Time Object');
+      $scope
+        .updateDataSource()
+        .then(setupVisualization)
+        .then(async function () {
+          $scope.fetchStatus = fetchStatuses.LOADING;
+          logInspectorRequest();
+          // eslint-disable-next-line camelcase
+          const search_source_local = _.cloneDeep($scope.searchSource);
+          // search_source_local = $scope.searchSource;
+          console.log('This is the local search source');
+          const pit_object = `{
           "pit": {
-            "id": "o463QQErb3BlbnNlYXJjaF9kYXNoYm9hcmRzX3NhbXBsZV9kYXRhX2Vjb21tZXJjZRZiU3h5azg4dlEyeTBFSVFuUjdnTTlnABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAAfFkZxM2IweWVnU1VtX2JNejBsaEMxcXcBFmJTeHlrODh2UTJ5MEVJUW5SN2dNOWcAAA==",
+            "id": "o463QQEKdGVzdF9pbmRleBZnSG5VR0dKWVJybW1QZzJRNzJ0YU1RABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAGNFkE1NXgtM3JLUjJxdExXc0lzd3lQQ2cBFmdIblVHR0pZUnJtbVBnMlE3MnRhTVEAAA==",
             "keep_alive": "1m"
           }
-        }`;
-        const pit_json = JSON.parse(pit_object);
-        // searchRequest.params.body = { ...searchRequest.params.body, ...pit_json };
-        search_source_local.fields = { ...search_source_local.fields, ...pit_json };
-        console.log(search_source_local);
-        await search_source_local.fetch({
-          abortSignal: abortController.signal,
-        });
-        console.log($scope.searchSource);
-        return await $scope.searchSource.fetch({
-          abortSignal: abortController.signal,
-        });
-      })
-      .then(onResults)
-      .catch((error) => {
-        // If the request was aborted then no need to surface this error in the UI
-        if (error instanceof Error && error.name === 'AbortError') return;
+          }`;
+          const pit_json = JSON.parse(pit_object);
+          // searchRequest.params.body = { ...searchRequest.params.body, ...pit_json };
+          search_source_local.fields = { ...search_source_local.fields, ...pit_json };
+          delete search_source_local.fields.index;
+          console.log(search_source_local);
+          debugger;
+          return await search_source_local.fetch({
+            abortSignal: abortController.signal,
+          });
+        })
+        .then(onResults)
+        .catch((error) => {
+          // If the request was aborted then no need to surface this error in the UI
+          if (error instanceof Error && error.name === 'AbortError') return;
 
-        $scope.fetchStatus = fetchStatuses.NO_RESULTS;
-        $scope.rows = [];
+          $scope.fetchStatus = fetchStatuses.NO_RESULTS;
+          $scope.rows = [];
 
-        data.search.showError(error);
-      });
+          data.search.showError(error);
+        });
+    } else {
+      $scope
+        .updateDataSource()
+        .then(setupVisualization)
+        .then(async function () {
+          $scope.fetchStatus = fetchStatuses.LOADING;
+          logInspectorRequest();
+          return await $scope.searchSource.fetch({
+            abortSignal: abortController.signal,
+          });
+        })
+        .then(onResults)
+        .catch((error) => {
+          // If the request was aborted then no need to surface this error in the UI
+          if (error instanceof Error && error.name === 'AbortError') return;
+
+          $scope.fetchStatus = fetchStatuses.NO_RESULTS;
+          $scope.rows = [];
+
+          data.search.showError(error);
+        });
+    }
   };
 
   $scope.handleRefresh = function (_payload, isUpdate) {
@@ -954,7 +993,7 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   }
 
   function onResults(resp) {
-    console.log("response after fetching the results",resp);
+    console.log('response after fetching the results', resp);
     inspectorRequest.stats(getResponseInspectorStats(resp, $scope.searchSource)).ok({ json: resp });
 
     if (getTimeField()) {
@@ -969,7 +1008,9 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
 
     $scope.hits = resp.hits.total;
     $scope.rows = resp.hits.hits;
-
+    debugger;
+    console.log($scope.hits);
+    console.log($scope.rows);
     // if we haven't counted yet, reset the counts
     const counts = ($scope.fieldCounts = $scope.fieldCounts || {});
 

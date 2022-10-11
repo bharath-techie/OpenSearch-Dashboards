@@ -116,7 +116,7 @@ export class SearchInterceptor {
     strategy?: string
   ): Observable<IOpenSearchDashboardsSearchResponse> {
     const { id, ...searchRequest } = request;
-    console.log("This is the search request which came", request);
+    console.log("This is the search request : ", request);
     const path = trimEnd(
       `/internal/search/${strategy || OPENSEARCH_SEARCH_STRATEGY}/${id || ''}`,
       '/'
@@ -133,7 +133,7 @@ export class SearchInterceptor {
     // searchRequest.params.ignore_unavailable;
     // // delete searchRequest.params.preference;
     const body = JSON.stringify(searchRequest);
-    console.log("body at interceptor", body)
+    console.log("body at interceptor is this: ", body)
     return from(
       this.deps.http.fetch({
         method: 'POST',

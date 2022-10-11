@@ -36,25 +36,42 @@ import { IndexPattern } from '../../opensearch_dashboards_services';
  * Helper function to remove or adapt the currently selected columns/sort to be valid with the next
  * index pattern, returns a new state object
  */
+
+export interface PointInTime {
+  attributes: any;
+  id: string;
+}
 export function getSwitchIndexPatternAppState(
-  currentIndexPattern: IndexPattern,
-  nextIndexPattern: IndexPattern,
+  currentIndexPattern: IndexPattern | PointInTime,
+  nextIndexPattern: IndexPattern | PointInTime,
   currentColumns: string[],
   currentSort: SortPairArr[],
   modifyColumns: boolean = true
 ) {
-  const nextColumns = modifyColumns
-    ? currentColumns.filter(
+  if (nextIndexPattern.attributes) {
+    console.log("This is a point in time object!")
+    debugger;
+    return {
+      pitid: nextIndexPattern.id,
+      index: null,
+      columns: currentColumns,
+      sort: currentSort,
+    };
+  } else {
+    const nextColumns = modifyColumns
+      ? currentColumns.filter(
         (column) => {
-        nextIndexPattern.fields.getByName(column) || !currentIndexPattern.fields.getByName(column)
+          nextIndexPattern.fields.getByName(column) || !currentIndexPattern.fields.getByName(column)
         }
 
       )
-    : currentColumns;
-  const nextSort = getSortArray(currentSort, nextIndexPattern);
-  return {
-    index: nextIndexPattern.id,
-    columns: nextColumns.length ? nextColumns : ['_source'],
-    sort: nextSort,
-  };
+      : currentColumns;
+    const nextSort = getSortArray(currentSort, nextIndexPattern);
+    return {
+      index: nextIndexPattern.id,
+      pitid: null,
+      columns: nextColumns.length ? nextColumns : ['_source'],
+      sort: nextSort,
+    };
+  }
 }

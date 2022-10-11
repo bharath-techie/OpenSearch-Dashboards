@@ -79,16 +79,19 @@ export function DiscoverIndexPattern({
     type: entity.type,
     references: entity.references,
   }));
-
-  const { id: selectedId, title: selectedTitle } = selectedIndexPattern || selectedPointInTime || {};
-
+  if (selectedPointInTime) {
+    selectedPointInTime = { ...selectedPointInTime, title: selectedPointInTime?.attributes?.name };
+  }
+  const selectedPattern = selectedPointInTime || selectedIndexPattern || {};
+  const { id: selectedId, title: selectedTitle } = selectedPattern;
+  debugger;
   const [selected, setSelected] = useState({
     id: selectedId,
     title: selectedTitle || '',
   });
   useEffect(() => {
-    console.log(selectedIndexPattern);
-    const { id, title } = selectedIndexPattern;
+    console.log(selectedPattern);
+    const { id, title } = selectedPattern;
     setSelected({ id, title });
   }, [selectedIndexPattern]);
 
@@ -124,8 +127,9 @@ export function DiscoverIndexPattern({
             }
             const pointInTime = point_in_time_options.find((pattern) => pattern.id == id);
             if (pointInTime) {
-              setIndexPattern(pointInTime.id);
               // setIndexPattern(pointInTime.id);
+              // setIndexPattern(pointInTime.id);
+              setPointInTime(pointInTime.id);
               const PitId = pointInTimeList[0].attributes.id;
               const title = pointInTimeList[0].attributes.name;
               setSelected({ id: PitId, title });

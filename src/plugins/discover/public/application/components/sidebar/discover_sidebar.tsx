@@ -170,7 +170,7 @@ export function DiscoverSidebar({
         className="sidebar-list"
         aria-label={i18n.translate('discover.fieldChooser.filter.indexAndFieldsSectionAriaLabel', {
           defaultMessage: 'Index and fields',
-        })}dis
+        })}
       >
         <DiscoverIndexPattern
           selectedIndexPattern={selectedIndexPattern}

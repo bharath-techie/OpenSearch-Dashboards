@@ -139,6 +139,7 @@ export function DiscoverLegacy({
   selectedPointInTime,
   setPointInTime,
 }: DiscoverLegacyProps) {
+  debugger;
   const [isSidebarClosed, setIsSidebarClosed] = useState(false);
   const { TopNavMenu } = getServices().navigation.ui;
   const { savedSearch, indexPatternList, pointInTimeList } = opts;
@@ -148,6 +149,10 @@ export function DiscoverLegacy({
       ? bucketAggConfig.buckets?.getInterval()
       : undefined;
   const [fixedScrollEl, setFixedScrollEl] = useState<HTMLElement | undefined>();
+  if (selectedPointInTime!= null){
+    selectedPointInTime = pointInTimeList.find((pattern) => pattern.id === selectedPointInTime);
+  }
+  debugger;
 
   useEffect(() => (fixedScrollEl ? opts.fixedScroll(fixedScrollEl) : undefined), [
     fixedScrollEl,
@@ -209,7 +214,7 @@ export function DiscoverLegacy({
                     onRemoveField={onRemoveColumn}
                     selectedIndexPattern={searchSource && searchSource.getField('index')}
                     setIndexPattern={setIndexPattern}
-                    selectedPointInTime={pointInTimeList[0]}
+                    selectedPointInTime={selectedPointInTime}
                     setPointInTime={setPointInTime}
                   />
                 </div>
