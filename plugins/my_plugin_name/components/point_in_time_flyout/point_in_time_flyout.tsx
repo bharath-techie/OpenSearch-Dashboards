@@ -155,15 +155,13 @@ export const PointInTimeFlyout = () => {
 
     const [isFlyoutVisible, setIsFlyoutVisible] = useState(false);
     const [showErrors, setShowErrors] = useState(false);
-    const [value, setValue] = useState('24');
+    const [keepAlive, setKeepAlive] = useState('24');
     const [checked, setChecked] = useState(false);
-    const onChange = (e) => {
-        setValue(e.target.value);
-    };
     const [loading, setLoading] = useState(true);
 
     const [indexPatterns, setIndexPatterns] = useState([] as PointInTimeFlyoutItem[]);
-
+    const[selectedIndexPattern, setSelectedIndexPattern] = useState("");
+    const[pitName, setPitName] = useState("");
 
     const {
         setBreadcrumbs,
@@ -176,7 +174,12 @@ export const PointInTimeFlyout = () => {
         data,
     } = useOpenSearchDashboards<IndexPatternManagmentContext>().services;
 
-
+    const onChange = (e) => {
+        setKeepAlive(e.target.value);
+    };
+    const onDropDownChange = (e) => {
+        setSelectedIndexPattern(e.target.value);
+    }
     console.log(useOpenSearchDashboards().services);
     console.log(savedObjects);
     useEffect(() => {
@@ -188,7 +191,7 @@ export const PointInTimeFlyout = () => {
                 return item['title'];
             });
             setIndexPatterns(gettedIndexPatterns);
-
+            setSelectedIndexPattern(gettedIndexPatterns[0].id);
             console.log(gettedIndexPatterns);
             setLoading(false);
         })();
@@ -197,16 +200,21 @@ export const PointInTimeFlyout = () => {
     ]);
 
     const createPointInTime = () => {
+        console.log("keep alive :" + keepAlive);
+        console.log("name : " + pitName);
+        console.log("index pattern : " + selectedIndexPattern);
         //setIsFlyoutVisible(false);
         const pit:PointInTime = {
-            name: 'abc1',
-            keepAlive: '24',
-            id: 'id1'
+            name: pitName,
+            keepAlive: keepAlive,
+            id: 'id1' // Todo create pit and fill the pit id
         }
+        const pattern = indexPatterns.find((r)=>r.id);
+        
         const reference:SavedObjectReference = {
-            id: indexPatterns[0].id,
+            id: pattern.id,
             type: 'index-pattern',
-            name: indexPatterns[0].title
+            name: pattern.title
         }
         createSavedObject(pit, savedObjects.client,reference)
     }
@@ -284,10 +292,15 @@ export const PointInTimeFlyout = () => {
         //     </EuiButton>
         // );
 
-
+        const onTextChange = (e) => {
+            setPitName(e.target.value);
+        }
         const onCheckboxChange = (e) => {
             setChecked(e.target.checked);
         };
+        const onDropDownChange = (e) => {
+            setSelectedIndexPattern(e.target.value);
+        }
         let errors;
         return <Fragment>
             <EuiForm isInvalid={showErrors} error={errors} component="form">
@@ -310,10 +323,12 @@ export const PointInTimeFlyout = () => {
                         })}
                         isInvalid={showErrors}
                         isLoading={loading}
+                        value={selectedIndexPattern}
+                        onChange={onDropDownChange}
                     />
                 </EuiFormRow>
                 <EuiFormRow label="Custom Point in time name" isInvalid={showErrors} fullWidth>
-                    <EuiFieldText fullWidth name="name" isInvalid={showErrors} />
+                    <EuiFieldText fullWidth name="name" isInvalid={showErrors} onChange={onTextChange} />
                 </EuiFormRow>
 
                 <EuiFormRow
@@ -326,7 +341,7 @@ export const PointInTimeFlyout = () => {
                         max={24}
                         step={0.05}
                         fullWidth
-                        value={value}
+                        value={keepAlive}
                         onChange={onChange}
                         showLabels
                         showValue
