@@ -55,13 +55,18 @@ export function registerSearchRoute(
       },
     },
     async (context, request, res) => {
+      console.log("This is being called!");
       const searchRequest = request.body;
       const { strategy, id } = request.params;
+      console.log('this is the search request', searchRequest);
+      console.log(request.body);
+      console.log(strategy, id);
       const abortSignal = getRequestAbortedSignal(request.events.aborted$);
 
       const [, , selfStart] = await getStartServices();
 
       try {
+        console.log("this is teh output",{ ...searchRequest, id });
         const response = await selfStart.search.search(
           context,
           { ...searchRequest, id },
@@ -70,6 +75,7 @@ export function registerSearchRoute(
             strategy,
           }
         );
+
 
         return res.ok({
           body: {
@@ -107,7 +113,7 @@ export function registerSearchRoute(
     },
     async (context, request, res) => {
       const { strategy, id } = request.params;
-
+      console.log("Okay, it's me who is being called!");
       const [, , selfStart] = await getStartServices();
       const searchStrategy = selfStart.search.getSearchStrategy(strategy);
       if (!searchStrategy.cancel) return res.ok();
