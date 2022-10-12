@@ -104,11 +104,13 @@ const fetchStatuses = {
 const app = getAngularModule();
 
 export async function getpits(savedObjectsClient) {
-
-  return savedObjectsClient.find({
+  return (
+    savedObjectsClient
+      .find({
         type: 'point-in-time',
         perPage: 10000,
-      }).then((response) =>
+      })
+      .then((response) =>
         response.savedObjects
           .map((pattern) => {
             return {
@@ -125,6 +127,7 @@ export async function getpits(savedObjectsClient) {
             }
           })
       ) || []
+  );
 }
 
 app.config(($routeProvider) => {
@@ -158,10 +161,8 @@ app.config(($routeProvider) => {
         const history = getHistory();
         const savedSearchId = $route.current.params.id;
         return await data.indexPatterns.ensureDefaultIndexPattern(history).then(async () => {
-
           const { appStateContainer } = getState({ history });
           const { index, pitid } = appStateContainer.getState();
-          debugger;
           return await Promise.props({
             ip: await indexPatterns.getCache().then(async (indexPatternList) => {
               /**
@@ -244,7 +245,6 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   // console.log("This is the search store",$scope.searchSource);
   $scope.indexPattern = resolveIndexPatternLoading();
   $scope.selectedPointInTime = $route.current.locals.savedObjects.pit.pitid || undefined;
-  debugger;
   // console.log($scope.indexPattern);
   //used for functional testing
   $scope.fetchCounter = 0;
@@ -285,8 +285,8 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
 
   // sync initial app filters from state to filterManager
   filterManager.setAppFilters(_.cloneDeep(appStateContainer.getState().filters));
+  debugger;
   data.query.queryString.setQuery(appStateContainer.getState().query);
-
   const stopSyncingQueryAppStateWithStateContainer = connectToQueryState(
     data.query,
     appStateContainer,
@@ -371,7 +371,6 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
     const pitList = await $route.current.locals.savedObjects.pit.list;
     const nextPit = pitList.find((pit) => pit.id === id);
     console.log(nextPit);
-    debugger;
     const nextAppState = getSwitchIndexPatternAppState(
       $scope.indexPattern,
       nextPit,
@@ -678,8 +677,8 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
   };
 
   function getStateDefaults() {
-    // const query = $scope.searchSource.getField('query') || data.query.queryString.getDefaultQuery();
-    const query = $scope.searchSource.getField('query');
+    const query = $scope.searchSource.getField('query') || data.query.queryString.getDefaultQuery();
+    //const query = $scope.searchSource.getField('query');
     debugger;
     return {
       query,
@@ -689,6 +688,7 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
           ? savedSearch.columns
           : config.get(DEFAULT_COLUMNS_SETTING).slice(),
       index: $scope.indexPattern.id,
+      pit: $scope.selectedPointInTime,
       interval: 'auto',
       filters: _.cloneDeep($scope.searchSource.getOwnField('filter')),
     };
@@ -883,6 +883,7 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
     abortController = new AbortController();
     debugger;
     if ($scope.selectedPointInTime != null) {
+      console.log($scope.selectedPointInTime);
       console.log('There is a selected Point in Time Object');
       $scope
         .updateDataSource()
@@ -894,13 +895,13 @@ function discoverController($element, $route, $scope, $timeout, $window, Promise
           const search_source_local = _.cloneDeep($scope.searchSource);
           // search_source_local = $scope.searchSource;
           console.log('This is the local search source');
-          const pit_object = `{
-          "pit": {
-            "id": "o463QQEKdGVzdF9pbmRleBZnSG5VR0dKWVJybW1QZzJRNzJ0YU1RABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAGNFkE1NXgtM3JLUjJxdExXc0lzd3lQQ2cBFmdIblVHR0pZUnJtbVBnMlE3MnRhTVEAAA==",
-            "keep_alive": "1m"
-          }
-          }`;
-          const pit_json = JSON.parse(pit_object);
+          const pit_object = {
+            pit: {
+              id: $scope.selectedPointInTime,
+              keep_alive: '1m',
+            },
+          };
+          const pit_json = JSON.parse(JSON.stringify(pit_object));
           // searchRequest.params.body = { ...searchRequest.params.body, ...pit_json };
           search_source_local.fields = { ...search_source_local.fields, ...pit_json };
           delete search_source_local.fields.index;

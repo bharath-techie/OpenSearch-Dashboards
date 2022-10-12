@@ -49,13 +49,9 @@ export function getSwitchIndexPatternAppState(
   modifyColumns: boolean = true
 ) {
   if (nextIndexPattern.attributes) {
-    console.log("This is a point in time object!")
-    debugger;
     return {
       pitid: nextIndexPattern.id,
       index: null,
-      columns: currentColumns,
-      sort: currentSort,
     };
   } else {
     const nextColumns = modifyColumns

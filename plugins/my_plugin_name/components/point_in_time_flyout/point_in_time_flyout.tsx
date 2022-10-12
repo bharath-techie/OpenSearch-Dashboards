@@ -190,7 +190,7 @@ export const PointInTimeFlyout = () => {
     const pit: PointInTime = {
       name: 'testing',
       keepAlive: '24',
-      id: "o463QQEKdGVzdF9pbmRleBZnSG5VR0dKWVJybW1QZzJRNzJ0YU1RABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAGNFkE1NXgtM3JLUjJxdExXc0lzd3lQQ2cBFmdIblVHR0pZUnJtbVBnMlE3MnRhTVEAAA==",
+      id: "o463QQEKdGVzdF9pbmRleBZnSG5VR0dKWVJybW1QZzJRNzJ0YU1RABZBb2lZV2Y4clFBV1NQNnBjNUxCMHh3AAAAAAAAAAIOFkE1NXgtM3JLUjJxdExXc0lzd3lQQ2cBFmdIblVHR0pZUnJtbVBnMlE3MnRhTVEAAA==",
     };
     const reference: SavedObjectReference = {
       id: indexPatterns[0].id,
