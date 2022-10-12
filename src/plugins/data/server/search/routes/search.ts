@@ -33,6 +33,8 @@ import { IRouter } from 'src/core/server';
 import { getRequestAbortedSignal } from '../../lib';
 import { SearchRouteDependencies } from '../search_service';
 import { shimHitsTotal } from './shim_hits_total';
+import {CREATE_POINT_IN_TIME_PATH} from "../../../../../../plugins/my_plugin_name/common";
+import {trimEnd} from "lodash";
 
 export function registerSearchRoute(
   router: IRouter,
@@ -124,6 +126,29 @@ export function registerSearchRoute(
           },
         });
       }
+    }
+  );
+  router.post(
+    {
+      path: `/internal/search/create_point_in_time/{index}`,
+      validate: false,
+    },
+    async (context, request, response) => {
+      console.log('This is the request for create point in time path inside the search.ts');
+      console.log(request);
+      // const path = trimEnd(
+      //   `/internal/search/create_point_in_time`,
+      //   '/'
+      // );
+      // const body = JSON.stringify(searchRequest);
+      // // eslint-disable-next-line @typescript-eslint/naming-convention
+      // const response_local = http.fetch({
+      //   method: 'POST',
+      //   path,
+      //   body,
+      // });
+      // console.log('This is after posting', response_local);
+      return response.ok();
     }
   );
 }

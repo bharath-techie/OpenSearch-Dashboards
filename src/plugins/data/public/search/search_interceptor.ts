@@ -120,6 +120,7 @@ export class SearchInterceptor {
       `/internal/search/${strategy || OPENSEARCH_SEARCH_STRATEGY}/${id || ''}`,
       '/'
     );
+    console.log(request);
     const body = JSON.stringify(searchRequest);
     return from(
       this.deps.http.fetch({
