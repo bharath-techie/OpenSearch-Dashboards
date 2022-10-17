@@ -34,6 +34,8 @@ import { ChromeStart, ApplicationStart, SavedObjectsStart, NotificationsStart, O
 import { IUiSettingsClient } from 'opensearch-dashboards/server';
 import { DataPublicPluginStart } from 'src/plugins/data/public';
 import { ManagementAppMountParams } from 'src/plugins/management/public';
+import { CoreStart, HttpFetchError } from 'opensearch-dashboards/public';
+import {CREATE_POINT_IN_TIME_PATH} from "../../common";
 
 export interface IndexPatternManagmentContext {
     chrome: ChromeStart;
@@ -199,24 +201,27 @@ export const PointInTimeFlyout = () => {
         savedObjects.client,
     ]);
 
-    const createPointInTime = () => {
-        console.log("keep alive :" + keepAlive);
-        console.log("name : " + pitName);
-        console.log("index pattern : " + selectedIndexPattern);
-        //setIsFlyoutVisible(false);
-        const pit:PointInTime = {
+    const createPointInTime = async () => {
+      console.log('keep alive :' + keepAlive);
+      console.log("name : " + pitName);
+      console.log("index pattern : " + selectedIndexPattern);
+      const pattern = indexPatterns.find((r)=>r.id);
+
+      //setIsFlyoutVisible(false);
+      const index = pattern.title
+      const response = await http.post(`${CREATE_POINT_IN_TIME_PATH}/${index}`);
+      const pit:PointInTime = {
             name: pitName,
             keepAlive: keepAlive,
-            id: 'id1' // Todo create pit and fill the pit id
+            id: response.pit_id // Todo create pit and fill the pit id
         }
-        const pattern = indexPatterns.find((r)=>r.id);
-        
+
         const reference:SavedObjectReference = {
             id: pattern.id,
             type: 'index-pattern',
             name: pattern.title
         }
-        createSavedObject(pit, savedObjects.client,reference)
+        createSavedObject(pit, savedObjects.client,reference, http)
     }
 
 
