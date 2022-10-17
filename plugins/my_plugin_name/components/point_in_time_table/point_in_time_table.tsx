@@ -147,6 +147,7 @@ export const PointInTimeTable = ({ canSave, history }: Props) => {
     const tableRef = useRef();
     const [pits, setPits] = useState([item1, item2]);
     const [selection, setSelection] = useState([]);
+    const [isFlyoutVisible, setIsFlyoutVisible] = useState(false);
     const {
         setBreadcrumbs,
         savedObjects,
@@ -171,7 +172,7 @@ export const PointInTimeTable = ({ canSave, history }: Props) => {
             setLoading(false);
         })();
     }, [
-        savedObjects.client,
+        savedObjects.client, isFlyoutVisible, 
     ]);
 
     // const renderToolsLeft = () => {
@@ -350,7 +351,7 @@ export const PointInTimeTable = ({ canSave, history }: Props) => {
                     </EuiText>
                 </EuiFlexItem>
                 <EuiFlexItem grow={false}>
-                    <PointInTimeFlyout />
+                    <PointInTimeFlyout setIsFlyoutVisible={setIsFlyoutVisible}/>
                 </EuiFlexItem>
 
             </EuiFlexGroup>
