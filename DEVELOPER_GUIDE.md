@@ -220,7 +220,6 @@ By default, the snapshot command will run [a minimal distribution of OpenSearch]
 If you would like to run OpenSearch with a particular plugin installed on the cluster snapshot, pass the `--P` flag after `yarn opensearch snapshot`. You can use the flag multiple times to install multiple plugins. The argument value can be a URL to the plugin's zip file, maven coordinates of the plugin, or a local zip file path (use `file://` followed by the absolute or relative path, in that case). For example:
 
 _(Linux, Windows, Darwin (MacOS) only - for others, you'll need to [run OpenSearch from a tarball](#alternative---run-opensearch-from-tarball) instead)_
-
 ```bash
 $ yarn opensearch snapshot --P https://repo1.maven.org/maven2/org/opensearch/plugin/opensearch-test-plugin/2.4.0.0/opensearch-test-plugin-2.4.0.0.zip
 ```

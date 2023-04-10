@@ -20,7 +20,7 @@ Inspired from [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - [Security] Bumps hapi/statehood to 7.0.4 ([#3411](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3411))
 - [CVE-2023-25166] Bump formula to 3.0.1 ([#3416](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3416))
 - [CVE-2023-25653] Bump node-jose to 2.2.0 ([#3445](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3445))
-- [CVE-2023-26486][cve-2023-26487] Bump vega from 5.22.1 to 5.23.0 ([#3533](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3533))
+- [CVE-2023-26486][CVE-2023-26487] Bump vega from 5.22.1 to 5.23.0 ([#3533](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3533))
 
 ### 📈 Features/Enhancements
 
@@ -63,6 +63,7 @@ Inspired from [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - [Optimizer] Increase timeout waiting for the exiting of an optimizer worker ([#3193](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3193))
 - [Data] Update `createAggConfig` so that newly created configs can be added to beginning of `aggConfig` array ([#3160](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3160))
 - Add disablePrototypePoisoningProtection configuration to prevent JS client from erroring when cluster utilizes JS reserved words ([#2992](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/2992))
+- [Point in TIme] Add management plugin shell and empty state ([#2813](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/2813))
 - [Multiple DataSource] Add support for SigV4 authentication ([#3058](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3058))
 - Make build scripts find and use the latest version of Node.js that satisfies `engines.node` ([#3467](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3467))
 - [Multiple DataSource] Refactor test connection to support SigV4 auth type ([#3456](https://github.com/opensearch-project/OpenSearch-Dashboards/pull/3456))
