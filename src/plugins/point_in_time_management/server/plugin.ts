@@ -12,7 +12,7 @@ import {
 } from '../../../core/server';
 
 import { PointInTimeManagementPluginSetup, PointInTimeManagementPluginStart } from './types';
-import { defineRoutes } from './routes';
+import { registerPitRoutes } from './routes';
 
 export class PointInTimeManagementPlugin
   implements Plugin<PointInTimeManagementPluginSetup, PointInTimeManagementPluginStart> {
@@ -26,7 +26,7 @@ export class PointInTimeManagementPlugin
     this.logger.debug('pointInTimeManagement: Setup');
     const router = core.http.createRouter();
 
-    defineRoutes(router);
+    registerPitRoutes(router);
 
     return {};
   }

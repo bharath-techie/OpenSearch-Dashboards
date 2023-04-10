@@ -4,6 +4,8 @@
  */
 
 import { i18n } from '@osd/i18n';
+import { DataPublicPluginStart } from 'src/plugins/data/public';
+import { DataSourcePluginStart } from 'src/plugins/data_source/public';
 import { CoreSetup, CoreStart, Plugin } from '../../../core/public';
 import { PointInTimeManagementPluginSetup, PointInTimeManagementPluginStart } from './types';
 import { ManagementSetup } from '../../management/public';
@@ -12,8 +14,10 @@ export interface PointInTimeManagementSetupDependencies {
   management: ManagementSetup;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface PointInTimeManagementStartDependencies {}
+export interface PointInTimeManagementStartDependencies {
+  data: DataPublicPluginStart;
+  dataSource?: DataSourcePluginStart;
+}
 
 const sectionsHeader = i18n.translate('pointInTimeManagement.pointInTime.sectionsHeader', {
   defaultMessage: 'Point In Time',

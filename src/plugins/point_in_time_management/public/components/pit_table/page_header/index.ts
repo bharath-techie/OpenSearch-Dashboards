@@ -3,4 +3,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export { registerPitRoutes } from './opensearch';
+export { PageHeader } from './page_header';

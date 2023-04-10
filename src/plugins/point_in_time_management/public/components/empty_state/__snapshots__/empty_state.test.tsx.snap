@@ -1,3 +1,8 @@
+/*
+ * Copyright OpenSearch Contributors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`EmptyState should render normally 1`] = `

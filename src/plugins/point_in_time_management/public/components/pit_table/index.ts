@@ -3,4 +3,4 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export { registerPitRoutes } from './opensearch';
+export { PITTableWithRouter } from './pit_table';

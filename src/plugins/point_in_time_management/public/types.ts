@@ -3,13 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ApplicationStart, ChromeStart } from 'opensearch-dashboards/public';
+import { ApplicationStart, ChromeStart, HttpSetup } from 'opensearch-dashboards/public';
+import { NotificationsStart, SavedObjectsStart } from 'src/core/public';
 import { NavigationPublicPluginStart } from '../../navigation/public';
+import { ManagementAppMountParams } from '../../management/public';
 import { ManagementSetup } from '../../management/public';
 
 export interface PointInTimeManagementContext {
   chrome: ChromeStart;
   application: ApplicationStart;
+  notifications: NotificationsStart;
+  savedObjects: SavedObjectsStart;
+  http: HttpSetup;
+  setBreadcrumbs: ManagementAppMountParams['setBreadcrumbs'];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
