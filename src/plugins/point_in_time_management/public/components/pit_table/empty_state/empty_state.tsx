@@ -27,3 +27,16 @@ export const EmptyState = () => (
     }
   />
 );
+
+export const NoDataSourceState = () => (
+  <EuiEmptyPrompt
+    body={
+      <p>
+        <FormattedMessage
+          id="pointInTimeManagement.noDataSource"
+          defaultMessage="Please select a valid data source to continue."
+        />
+      </p>
+    }
+  />
+);
