@@ -20,6 +20,8 @@ import {
   EuiText,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiBadge,
+  EuiSelect,
 } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
@@ -74,6 +76,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
   // TODO: use APIs to fetch PITs and update the table and message
   const [loading, setLoading] = useState(false);
   const [pits, setPits] = useState<PitItem[]>([]);
+  const [selectedPits, setSelectedPits] = useState<PitItem[]>([]);
   // const [dashboardPits, setDashboardPits] = useState<DashboardPitItem[]>([]);
   const [message, setMessage] = useState(<EmptyState />);
 
@@ -194,6 +197,32 @@ const PITTable = ({ history }: RouteComponentProps) => {
       });
   };
 
+  const deletePit = (pit) => {
+    let dataSourceId: string | undefined = '';
+    if (dataSource === '') {
+      dataSourceId = undefined;
+    } else {
+      const dataSource = dataSources.filter((x) => x.title === dataSourceId);
+      if (dataSource.length === 0) {
+        toasts.addDanger(
+          i18n.translate('pitManagement.pitTable.fetchDataSourceError', {
+            defaultMessage: 'Unable to find data source',
+          })
+        );
+        setMessage(<NoDataSourceState />);
+        setPits([]);
+        return;
+      } else {
+        dataSourceId = dataSource[0].id;
+      }
+    }
+
+    services.deletePits([pit.pit_id], dataSourceId).then((deletedPits) => {
+      console.log(deletedPits);
+      getPits(dataSource);
+    });
+  };
+
   const actions = [
     {
       name: 'Add Time',
@@ -211,13 +240,43 @@ const PITTable = ({ history }: RouteComponentProps) => {
     },
     {
       name: 'Delete',
-      description: 'Delete this person',
+      description: 'Delete PIT',
       icon: 'trash',
       type: 'icon',
       color: 'danger',
-      onClick: fetchDataSources,
+      onClick: deletePit,
     },
   ];
+
+  const Timer = ({ endTime }) => {
+    const getTime = () =>
+      moment(endTime).isBefore(now()) ? 'Expired' : '~ ' + moment(endTime).fromNow(true);
+
+    const getBadgeColor = () => {
+      const timeLeft = endTime - moment.now().valueOf();
+      if (timeLeft < 0) {
+        return 'hollow';
+      } else if (timeLeft < 10 * 60 * 1000) {
+        return 'danger';
+      } else {
+        return 'default';
+      }
+    };
+
+    const [time, setTime] = useState<string>(() => getTime());
+    const [badge, setBadge] = useState(() => getBadgeColor());
+
+    const updateTime = () => {
+      setInterval(() => {
+        setTime(() => getTime());
+        setBadge(() => getBadgeColor());
+      }, 30000);
+    };
+
+    useEffectOnce(updateTime);
+
+    return <EuiBadge color={badge}>{time}</EuiBadge>;
+  };
 
   const columns = [
     {
@@ -233,7 +292,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
       }),
       render: (t: number) => {
         // return prettyDuration(moment(t).format('YYYY-MM-DDTHH:mm:ss'),'now',[], 'MMMM Do YYYY, HH:mm:ss.SSS')
-        return moment(t).isBefore(now()) ? 'Expired' : moment(t).fromNow(true);
+        return <Timer endTime={t} />;
       },
       sortable: true,
     },
@@ -267,54 +326,109 @@ const PITTable = ({ history }: RouteComponentProps) => {
     },
   ];
 
+  const handleDeletePit = () => {
+    let dataSourceId: string | undefined = '';
+    if (dataSource === '') {
+      dataSourceId = undefined;
+    } else {
+      const dataSource = dataSources.filter((x) => x.title === dataSourceId);
+      if (dataSource.length === 0) {
+        toasts.addDanger(
+          i18n.translate('pitManagement.pitTable.fetchDataSourceError', {
+            defaultMessage: 'Unable to find data source',
+          })
+        );
+        setMessage(<NoDataSourceState />);
+        setPits([]);
+        return;
+      } else {
+        dataSourceId = dataSource[0].id;
+      }
+    }
+
+    services
+      .deletePits(
+        selectedPits.map((x) => x.pit_id),
+        dataSourceId
+      )
+      .then((deletedPits) => {
+        console.log(deletedPits);
+        getPits(dataSource);
+      });
+  };
+
   const renderToolsRight = () => {
     return [
       <EuiButton
         iconType="trash"
         key="deletePit"
-        isDisabled={pits.length === 0}
+        isDisabled={selectedPits.length === 0}
         data-test-subj="deletePITBtnInPitTable"
+        onClick={handleDeletePit}
       >
         <FormattedMessage id="pitManagement.pitTable.deletePitButton" defaultMessage="Delete" />
       </EuiButton>,
     ];
   };
 
-  function onQueryChange({ query }: { query: Query }) {
-    if (query.ast.getFieldClauses('dataSource')) {
-      const selectedDataSource = query.ast.getFieldClauses('dataSource')[0].value as string;
-      setDataSource(selectedDataSource);
-    } else {
-      setMessage(<NoDataSourceState />);
-      setDataSource('noDataSource');
-    }
-  }
+  const renderToolsLeft = () => {
+    return [
+      <EuiSelect
+        id="selectDocExample"
+        options={dataSources.map((source) => ({
+          value: source.title,
+          text: source.name,
+        }))}
+        value={dataSource}
+        onChange={(e) => setDataSource(e.target.value)}
+      />,
+    ];
+  };
+
+  // function onQueryChange({ query }: { query: Query }) {
+  //   if (query.ast.getFieldClauses('dataSource')) {
+  //     const selectedDataSource = query.ast.getFieldClauses('dataSource')[0].value as string;
+  //     setDataSource(selectedDataSource);
+  //   } else {
+  //     setMessage(<NoDataSourceState />);
+  //     setDataSource('noDataSource');
+  //   }
+  // }
 
   const search: EuiSearchBarProps = {
+    toolsLeft: renderToolsLeft(),
     toolsRight: renderToolsRight(),
-    defaultQuery: 'dataSource:""',
-    onChange: onQueryChange,
+    // defaultQuery: 'dataSource:""',
+    // onChange: onQueryChange,
     box: {
       incremental: true,
       schema: true,
       disabled: pits.length === 0,
     },
-    filters: [
-      {
-        type: 'field_value_selection',
-        searchThreshold: 5,
-        field: 'dataSource',
-        name: i18n.translate('pitManagement.pitTable.dataSourceFilterName', {
-          defaultMessage: 'Data Source',
-        }),
-        multiSelect: false,
-        options: dataSources.map((source) => ({
-          value: source.title,
-          name: source.name,
-          view: `${source.title}`,
-        })),
-      },
-    ],
+    // filters: [
+    //   {
+    //     type: 'field_value_selection',
+    //     searchThreshold: 5,
+    //     field: 'dataSource',
+    //     name: i18n.translate('pitManagement.pitTable.dataSourceFilterName', {
+    //       defaultMessage: 'Data Source',
+    //     }),
+    //     multiSelect: false,
+    //     options: dataSources.map((source) => ({
+    //       value: source.title,
+    //       name: source.name,
+    //       view: `${source.title}`,
+    //     })),
+    //   },
+    // ],
+  };
+
+  const onSelectionChange = (selected: PitItem[]) => {
+    setSelectedPits(selected);
+  };
+
+  const selection = {
+    onSelectionChange,
   };
 
   const pagination = {
@@ -324,57 +438,73 @@ const PITTable = ({ history }: RouteComponentProps) => {
 
   const PageHeader = () => {
     const [refreshTime, setRefreshTime] = useState<number>(moment.now());
-    const [timeSinceRefresh, setTimeSinceRefresh] = useState<string>(moment(refreshTime).fromNow(true));
-  
+    const [timeSinceRefresh, setTimeSinceRefresh] = useState<string>(
+      moment(refreshTime).fromNow(true)
+    );
+
     const handleClick = () => {
       getPits(dataSource);
       setRefreshTime(moment.now());
-    }
+    };
 
     const updateTimeSinceRefresh = () => {
       setInterval(() => {
         setTimeSinceRefresh(moment(refreshTime).fromNow(true));
-      }, 30000)
-    }
-    
+      }, 30000);
+    };
+
     useEffectOnce(updateTimeSinceRefresh);
 
     return (
-    <>
-      <EuiPageContentHeader>
-        <EuiPageContentHeaderSection>
-          <EuiTitle>
-            <h1>
-              <FormattedMessage id="pitManagement.header.pitTitle" defaultMessage="Point in Time" />
-            </h1>
-          </EuiTitle>
-        </EuiPageContentHeaderSection>
-        <EuiFlexGroup alignItems='center' justifyContent="flexEnd" gutterSize="s">
-        <EuiFlexItem grow={false}>
-        <EuiText>Last updated {timeSinceRefresh} ago</EuiText>
-        </EuiFlexItem>
-        <EuiFlexItem grow={false}>
-        <EuiButton iconType="refresh" data-test-subj="refreshPITBtnInHeader" onClick={handleClick}>
-          <FormattedMessage id="pitManagement.header.refreshPitButton" defaultMessage="Refresh" />
-        </EuiButton>
-        </EuiFlexItem>
-        <EuiFlexItem grow={false}>
-        <EuiButton fill={true} iconType="plusInCircle" data-test-subj="createPITBtnInHeader">
-          <FormattedMessage id="pitManagement.header.createPitButton" defaultMessage="Create PIT" />
-        </EuiButton>
-        </EuiFlexItem>
-        </EuiFlexGroup>
-      </EuiPageContentHeader>
-      <EuiText size="s">
-        <p>
-          <FormattedMessage
-            id="pitManagement.pitDescription"
-            defaultMessage="Create and manage point in time objects."
-          />
-        </p>
-      </EuiText>
-    </>
-  )};
+      <>
+        <EuiPageContentHeader>
+          <EuiPageContentHeaderSection>
+            <EuiTitle>
+              <h1>
+                <FormattedMessage
+                  id="pitManagement.header.pitTitle"
+                  defaultMessage="Point in Time"
+                />
+              </h1>
+            </EuiTitle>
+          </EuiPageContentHeaderSection>
+          <EuiFlexGroup alignItems="center" justifyContent="flexEnd" gutterSize="s">
+            <EuiFlexItem grow={false}>
+              <EuiText>Last updated {timeSinceRefresh} ago</EuiText>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiButton
+                iconType="refresh"
+                data-test-subj="refreshPITBtnInHeader"
+                onClick={handleClick}
+              >
+                <FormattedMessage
+                  id="pitManagement.header.refreshPitButton"
+                  defaultMessage="Refresh"
+                />
+              </EuiButton>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiButton fill={true} iconType="plusInCircle" data-test-subj="createPITBtnInHeader">
+                <FormattedMessage
+                  id="pitManagement.header.createPitButton"
+                  defaultMessage="Create PIT"
+                />
+              </EuiButton>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        </EuiPageContentHeader>
+        <EuiText size="s">
+          <p>
+            <FormattedMessage
+              id="pitManagement.pitDescription"
+              defaultMessage="Create and manage point in time objects."
+            />
+          </p>
+        </EuiText>
+      </>
+    );
+  };
 
   return (
     <>
@@ -383,8 +513,8 @@ const PITTable = ({ history }: RouteComponentProps) => {
         horizontalPosition="center"
         data-test-subj="pointInTimeTable"
       >
-        <PageHeader 
-        // handleRefresh={getPits(dataSource)} 
+        <PageHeader
+        // handleRefresh={getPits(dataSource)}
         />
         <EuiSpacer size="m" />
         <EuiPageContentBody>
@@ -398,6 +528,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
             pagination={pagination}
             sorting={true}
             isSelectable={true}
+            selection={selection}
           />
         </EuiPageContentBody>
       </EuiPageContent>

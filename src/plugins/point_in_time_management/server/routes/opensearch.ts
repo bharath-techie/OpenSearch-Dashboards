@@ -42,6 +42,37 @@ export function registerPitRoutes(router: IRouter) {
     }
   );
 
+  router.post(
+    {
+      path: '/api/pit/delete',
+      validate: {
+        body: schema.object({
+          dataSourceId: schema.string(),
+          pit_id: schema.arrayOf(schema.string()),
+        }),
+      },
+    },
+    async (context, req, res) => {
+      const client: OpenSearchClient = await getClient(req, context);
+      try {
+        const pits = await client.deletePit({ body: { pit_id: req.body.pit_id } });
+        return res.ok({
+          body: {
+            ok: true,
+            resp: pits.body,
+          },
+        });
+      } catch (err: any) {
+        return res.ok({
+          body: {
+            ok: false,
+            resp: err.message,
+          },
+        });
+      }
+    }
+  );
+
   // router.post(
   //     {
   //         path: '/api/geospatial/_search',
