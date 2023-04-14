@@ -43,11 +43,15 @@ export async function getDashboardPits(savedObjectsClient: SavedObjectsClientCon
           name: 'PIT-my-index-1',
           id:
             'o463QQEKbXktaW5kZXgtMRZtN2RWMHdaRlNILThIMUVWWDJJMVBRABZxMlNNZVdPZVRGbVR6MUxPc1RZYkx3AAAAAAAAAAAiFmhZdDNoTk9hUlBlVng2RVNIMUNhelEBFm03ZFYwd1pGU0gtOEgxRVZYMkkxUFEAAA==',
+          creation_time: 1681386155468,
+          keep_alive: 600000,
         },
         {
           name: 'PIT-my-index-2',
           id:
             'o463QQEKbXktaW5kZXgtMRZtN2RWMHdaRlNILThIMUVWWDJJMVBRABZxMlNNZVdPZVRGbVR6MUxPc1RZYkx3AAAAAAAAAAAjFmhZdDNoTk9hUlBlVng2RVNIMUNhelEBFm03ZFYwd1pGU0gtOEgxRVZYMkkxUFEAAA==',
+          creation_time: 1681386155468,
+          keep_alive: 600000,
         },
       ];
     });

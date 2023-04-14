@@ -22,6 +22,9 @@ import {
   EuiFlexItem,
   EuiBadge,
   EuiSelect,
+  EuiConfirmModal,
+  EuiFormRow,
+  EuiFieldText,
 } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
@@ -45,6 +48,8 @@ export interface DataSourceItem {
 export interface DashboardPitItem {
   id: string;
   name: string;
+  creation_time: number;
+  keep_alive: number;
 }
 
 export interface PitItem {
@@ -76,12 +81,14 @@ const PITTable = ({ history }: RouteComponentProps) => {
   // TODO: use APIs to fetch PITs and update the table and message
   const [loading, setLoading] = useState(false);
   const [pits, setPits] = useState<PitItem[]>([]);
+  const [pitsToDelete, setPitsToDelete] = useState<PitItem[]>([]);
   const [selectedPits, setSelectedPits] = useState<PitItem[]>([]);
   // const [dashboardPits, setDashboardPits] = useState<DashboardPitItem[]>([]);
   const [message, setMessage] = useState(<EmptyState />);
 
   const [dataSources, setDataSources] = useState<DataSourceItem[]>([defaultDataSource]);
   const [dataSource, setDataSource] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffectOnce(() => {
     fetchDataSources();
@@ -153,26 +160,44 @@ const PITTable = ({ history }: RouteComponentProps) => {
 
             setLoading(false);
             if (fetchedPits?.resp?.pits) {
+              let expiredPits: DashboardPitItem[] = [];
+              if (dataSourceId === undefined) {
+                expiredPits = fetchedDashboardPits.filter(
+                  (x) => !fetchedPits?.resp?.pits.some((x2) => x.id === x2.pit_id)
+                );
+              }
+              console.log(expiredPits);
               setPits(
-                fetchedPits?.resp?.pits.map((val) => {
-                  const date = moment(val.creation_time);
-                  let formattedDate = date.format('MMM D @ HH:mm:ss');
-                  const expiry = val.creation_time + val.keep_alive;
-                  const dashboardPit = fetchedDashboardPits.filter((x) => x.id === val.pit_id);
-                  console.log(dashboardPit);
-                  if (dashboardPit.length > 0) {
-                    formattedDate = dashboardPit[0].name;
-                  }
+                fetchedPits?.resp?.pits
+                  .map((val) => {
+                    const date = moment(val.creation_time);
+                    let formattedDate = date.format('MMM D @ HH:mm:ss');
+                    const expiry = val.creation_time + val.keep_alive;
+                    const dashboardPit = fetchedDashboardPits.filter((x) => x.id === val.pit_id);
+                    console.log(dashboardPit);
+                    if (dashboardPit.length > 0) {
+                      formattedDate = dashboardPit[0].name;
+                    }
 
-                  return {
-                    pit_id: val.pit_id,
-                    name: formattedDate,
-                    creation_time: val.creation_time,
-                    keep_alive: val.keep_alive,
-                    dataSource: dataSourceName,
-                    expiry,
-                  };
-                })
+                    return {
+                      pit_id: val.pit_id,
+                      name: formattedDate,
+                      creation_time: val.creation_time,
+                      keep_alive: val.keep_alive,
+                      dataSource: dataSourceName,
+                      expiry,
+                    };
+                  })
+                  .concat(
+                    expiredPits.map((x) => ({
+                      pit_id: x.id,
+                      name: x.name,
+                      creation_time: x.creation_time,
+                      keep_alive: x.keep_alive,
+                      dataSource: dataSourceName,
+                      expiry: x.creation_time + x.keep_alive,
+                    }))
+                  )
               );
             }
 
@@ -202,8 +227,8 @@ const PITTable = ({ history }: RouteComponentProps) => {
     if (dataSource === '') {
       dataSourceId = undefined;
     } else {
-      const dataSource = dataSources.filter((x) => x.title === dataSourceId);
-      if (dataSource.length === 0) {
+      const dataSourceObj = dataSources.filter((x) => x.title === dataSource);
+      if (dataSourceObj.length === 0) {
         toasts.addDanger(
           i18n.translate('pitManagement.pitTable.fetchDataSourceError', {
             defaultMessage: 'Unable to find data source',
@@ -213,14 +238,82 @@ const PITTable = ({ history }: RouteComponentProps) => {
         setPits([]);
         return;
       } else {
-        dataSourceId = dataSource[0].id;
+        dataSourceId = dataSourceObj[0].id;
       }
     }
-
     services.deletePits([pit.pit_id], dataSourceId).then((deletedPits) => {
       console.log(deletedPits);
       getPits(dataSource);
     });
+  };
+
+  const DeleteModal = ({}) => {
+    const closeModal = () => {
+      setIsModalVisible(false);
+    };
+
+    const [value, setValue] = useState('');
+    const onChange = (e) => {
+      setValue(e.target.value);
+      console.log(pitsToDelete[0]);
+    };
+
+    let modal;
+
+    if (isModalVisible) {
+      const expired = moment(pitsToDelete[0].expiry).isBefore(now());
+      if (expired) {
+        modal = (
+          <EuiConfirmModal
+            title="Delete PIT?"
+            onCancel={closeModal}
+            onConfirm={() => {
+              closeModal();
+              deletePit(pitsToDelete[0]);
+              setPitsToDelete([]);
+            }}
+            confirmButtonText="Delete PIT"
+            cancelButtonText="Cancel"
+            buttonColor="danger"
+          >
+            <EuiText>The PIT will be permanently deleted. This action is irreversible.</EuiText>
+            <EuiSpacer />
+          </EuiConfirmModal>
+        );
+      } else {
+        modal = (
+          <EuiConfirmModal
+            title="Delete PIT?"
+            onCancel={closeModal}
+            onConfirm={() => {
+              closeModal();
+              deletePit(pitsToDelete[0]);
+              setPitsToDelete([]);
+            }}
+            confirmButtonText="Delete PIT"
+            cancelButtonText="Cancel"
+            buttonColor="danger"
+            confirmButtonDisabled={value !== pitsToDelete[0].name}
+          >
+            <EuiText>
+              This is an active PIT. Deleting it will permanently remove data and may cause
+              unexpected behavior in saved objects that use this PIT. This action is irreversible.
+            </EuiText>
+            <EuiSpacer />
+            <EuiFormRow label={'Type "' + pitsToDelete[0].name + '" to confirm'}>
+              <EuiFieldText name="delete" value={value} onChange={onChange} />
+            </EuiFormRow>
+          </EuiConfirmModal>
+        );
+      }
+    }
+
+    return <div>{modal}</div>;
+  };
+
+  const displayDelete = (pit) => {
+    setPitsToDelete([pit]);
+    setIsModalVisible(true);
   };
 
   const actions = [
@@ -244,7 +337,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
       icon: 'trash',
       type: 'icon',
       color: 'danger',
-      onClick: deletePit,
+      onClick: displayDelete,
     },
   ];
 
@@ -331,8 +424,8 @@ const PITTable = ({ history }: RouteComponentProps) => {
     if (dataSource === '') {
       dataSourceId = undefined;
     } else {
-      const dataSource = dataSources.filter((x) => x.title === dataSourceId);
-      if (dataSource.length === 0) {
+      const dataSourceObj = dataSources.filter((x) => x.title === dataSource);
+      if (dataSourceObj.length === 0) {
         toasts.addDanger(
           i18n.translate('pitManagement.pitTable.fetchDataSourceError', {
             defaultMessage: 'Unable to find data source',
@@ -342,7 +435,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
         setPits([]);
         return;
       } else {
-        dataSourceId = dataSource[0].id;
+        dataSourceId = dataSourceObj[0].id;
       }
     }
 
@@ -530,6 +623,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
             isSelectable={true}
             selection={selection}
           />
+          <DeleteModal />
         </EuiPageContentBody>
       </EuiPageContent>
     </>
