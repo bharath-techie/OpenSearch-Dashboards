@@ -19,6 +19,8 @@ export function getServices(http: CoreStart['http']): Services {
             dataSourceId: dataSourceId ? dataSourceId : '',
           }),
         });
+        console.log("These are backend PITs");
+        console.log(response);
         return response;
       } catch (e) {
         return e;

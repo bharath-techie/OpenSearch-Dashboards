@@ -33,6 +33,7 @@ export const pointInTimeSavedObject: SavedObjectsType = {
       creation_time: { type: 'double' },
       keepAlive: { type: 'integer' },
       name: { type: 'text' },
+      pit_id: { type: 'text' },
     },
   },
 };
