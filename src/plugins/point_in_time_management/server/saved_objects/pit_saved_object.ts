@@ -34,6 +34,7 @@ export const pointInTimeSavedObject: SavedObjectsType = {
       keepAlive: { type: 'integer' },
       name: { type: 'text' },
       pit_id: { type: 'text' },
+      delete_on_expiry: { type: 'boolean' },
     },
   },
 };

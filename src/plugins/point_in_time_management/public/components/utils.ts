@@ -5,6 +5,7 @@
 
 import { SavedObjectReference, SavedObjectsClientContract } from 'src/core/public';
 import { DataSourceAttributes } from 'src/plugins/data_source/common/data_sources';
+import {PointInTimeAttributes} from "../types";
 
 export async function getDataSources(savedObjectsClient: SavedObjectsClientContract) {
   return savedObjectsClient
@@ -63,6 +64,7 @@ export interface PointInTime {
   pit_id: string;
   creation_time: number;
   id?: string;
+  delete_on_expiry: boolean;
 }
 
 export async function getIndexPatterns(savedObjectsClient: SavedObjectsClientContract) {
@@ -117,17 +119,27 @@ export async function findById(client: SavedObjectsClientContract, id: string) {
     const savedObjects = await client.find({
       type: 'point-in-time',
       perPage: 1000,
-      // search: `${id}`,
-      // searchFields: ['id'],
-      fields: ['id'],
+      fields: [],
     });
-    console.log(savedObjects.savedObjects);
-    return savedObjects.savedObjects.find(
-      (obj) => obj.attributes.pit_id.toLowerCase() === id.toLowerCase()
-    );
+    return savedObjects.savedObjects.find((obj) => obj.id === id);
   }
 }
 
+export async function updatePointInTimeById(
+  savedObjectsClient: SavedObjectsClientContract,
+  id: string,
+  attributes: PointInTimeAttributes
+) {
+  return savedObjectsClient.update('point-in-time', id, attributes);
+}
+
+export async function updatePointInTimeKeepAlive(
+  savedObjectsClient: SavedObjectsClientContract,
+  id: string,
+  addTime: number
+) {
+
+}
 export async function createSavedObject(
   pointintime: PointInTime,
   client: SavedObjectsClientContract,

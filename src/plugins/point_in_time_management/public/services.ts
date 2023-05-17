@@ -8,6 +8,7 @@ import { CoreStart, HttpFetchError } from 'opensearch-dashboards/public';
 export interface Services {
   getAllPits: (dataSourceId?: string) => Promise<undefined | HttpFetchError>;
   deletePits: (pits: string[], dataSourceId?: string) => any;
+  addPitTime: (pit_id: string, keepAlive: string, dataSourceId?: string) => any;
 }
 
 export function getServices(http: CoreStart['http']): Services {
@@ -26,7 +27,22 @@ export function getServices(http: CoreStart['http']): Services {
         return e;
       }
     },
-
+    addPitTime: async (pit_id: string, keepAlive: string, dataSourceId?: string) => {
+      try {
+        console.log(pit_id, keepAlive, dataSourceId);
+        const response = await http.post('/api/pit/addTime', {
+          body: JSON.stringify({
+            dataSourceId: dataSourceId ? dataSourceId : 'default',
+            pit_id: pit_id,
+            keepAlive: keepAlive,
+          }),
+        });
+        console.log("Updated the PIT KeepAlive");
+        console.log(response);
+      } catch (e) {
+        return e;
+      }
+    },
     deletePits: async (pits: string[], dataSourceId?: string) => {
       try {
         const response = await http.post('/api/pit/delete', {

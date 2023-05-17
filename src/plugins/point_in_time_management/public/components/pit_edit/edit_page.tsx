@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { useMount } from 'react-use';
+import {useEffectOnce, useMount} from 'react-use';
 import { i18n } from '@osd/i18n';
 import {
+  EuiBottomBar,
+  EuiButton,
+  EuiButtonEmpty,
   EuiCheckbox,
   EuiDescribedFormGroup,
   EuiFieldNumber,
@@ -23,123 +26,85 @@ import {
   EuiTitle,
 } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { PointInTimeManagementContext } from '../../types';
+import { PointInTimeAttributes, PointInTimeManagementContext} from '../../types';
 import { getEditBreadcrumbs } from '../breadcrumbs';
+import { EditPitForm } from './edit_pit_form';
+import {findById, findPointInTimeSavedObject, updatePointInTimeById, updatePointInTimeKeepAlive} from '../utils';
+import {ToastMessageItem} from "../../../../data_source_management/public/types";
+import {getServices, Services} from "../../services";
+
+const defaultPitSavedObject: PointInTimeAttributes = {
+  pit_id: '',
+  creation_time: 0,
+  id: '',
+  keepAlive: 0,
+  name: '',
+  addtime: 0,
+};
 
 export const PITEdit: React.FunctionComponent<RouteComponentProps<{ id: string }>> = (
   props: RouteComponentProps<{ id: string }>
 ) => {
-  const { setBreadcrumbs } = useOpenSearchDashboards<PointInTimeManagementContext>().services;
+  const { setBreadcrumbs, savedObjects, notifications: { toasts }, http } = useOpenSearchDashboards<
+    PointInTimeManagementContext
+  >().services;
   const PitID: string = props.match.params.id;
-  useMount(() => {
+  const [pitSavedObject, setPitSavedObject] = useState<PointInTimeAttributes>(defaultPitSavedObject);
+  const [isLoading, setIsLoading] = useState(false);
+  const [newProp, setNewProp] = useState(false);
+  const services: Services = getServices(http);
+  useEffectOnce(() => {
     console.log(PitID);
     setBreadcrumbs(getEditBreadcrumbs());
+    setIsLoading(true);
+    (async function () {
+      await fetchPitSavedObject();
+    })();
   });
-  const [checked, setChecked] = useState(false);
-  const onChange = (e) => {
-    setChecked(e.target.checked);
+
+  const fetchPitSavedObject = async () => {
+    const tempPitSavedObject = await findById(savedObjects.client, PitID);
+    setNewProp(true);
+    const pointInTimeAttributes: PointInTimeAttributes = {
+      creation_time: tempPitSavedObject.attributes.creation_time,
+      name: tempPitSavedObject.attributes.name,
+      keepAlive: tempPitSavedObject.attributes.keepAlive,
+      pit_id: tempPitSavedObject.attributes.pit_id,
+      id: tempPitSavedObject.id,
+      addtime: 0,
+    };
+    console.log('This is teh attributes');
+    console.log(pointInTimeAttributes);
+    setPitSavedObject(pointInTimeAttributes);
+    setIsLoading(false);
+  }
+
+  const handleSubmit = async (attributes: PointInTimeAttributes) => {
+    console.log('These are the attributes', attributes);
+    const new_keep_alive_proposal = attributes.addtime.toString() + "m";
+    console.log(attributes.pit_id, new_keep_alive_proposal);
+    await services.addPitTime(attributes.pit_id, new_keep_alive_proposal);
+    await updatePointInTimeById(savedObjects.client, attributes.id, attributes);
+  };
+
+  const handleDisplayToastMessage = ({ id, defaultMessage, success }: ToastMessageItem) => {
+    if (success) {
+      toasts.addSuccess(i18n.translate(id, { defaultMessage }));
+    } else {
+      toasts.addWarning(i18n.translate(id, { defaultMessage }));
+    }
   };
 
   return (
     <>
-      <EuiPageContent
-        data-test-subj="PitConfiguration"
-        role="region"
-        aria-label={i18n.translate('pitManagement.editPage', {
-          defaultMessage: 'Point in Time',
-        })}
-      >
-        <EuiPageHeader bottomBorder>
-          <EuiPageHeaderSection>
-            <EuiTitle size="l">
-              <h1>Time Configurations</h1>
-            </EuiTitle>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-        <EuiSpacer />
-        <EuiForm component="form">
-          <EuiDescribedFormGroup
-            title={<h3>Add time</h3>}
-            description={
-              <p>
-                The keep_alive time is the amount of time the PIT is kept active. The time entered
-                will also be the amount of time a PIT is extended by when it is queried. A PITs time
-                can not be extended by an amount less than the one entered. The keep alive time can
-                not exceed a maximum of X hours.
-              </p>
-            }
-          >
-            <EuiFormRow>
-              <EuiFlexGroup>
-                <EuiFlexItem>
-                  <EuiFieldNumber placeholder="Hour(s)" />
-                </EuiFlexItem>
-                <EuiFlexItem>
-                  <EuiFieldNumber placeholder="Min(s)" />
-                </EuiFlexItem>
-              </EuiFlexGroup>
-            </EuiFormRow>
-          </EuiDescribedFormGroup>
-        </EuiForm>
-      </EuiPageContent>
-      <EuiSpacer />
-      <EuiPageContent
-        data-test-subj="PitConfiguration"
-        role="region"
-        aria-label={i18n.translate('pitManagement.editPage', {
-          defaultMessage: 'Point in Time',
-        })}
-      >
-        <EuiPageHeader bottomBorder>
-          <EuiPageHeaderSection>
-            <EuiTitle size="l">
-              <h1>Dashboard PIT configurations</h1>
-            </EuiTitle>
-          </EuiPageHeaderSection>
-        </EuiPageHeader>
-        <EuiSpacer />
-        <EuiForm component="form">
-          <EuiDescribedFormGroup
-            title={<h3>PIT name</h3>}
-            description={<p>Choose a name for a PIT that is available in OpenSearch Dashboards.</p>}
-          >
-            <EuiFormRow
-              label="PIT name"
-              helpText="Specify a unique and descriptive name that is easy to recognize."
-            >
-              <EuiFieldText name="pit-name" />
-            </EuiFormRow>
-          </EuiDescribedFormGroup>
-          <EuiDescribedFormGroup
-            title={<h3>Post-expiration actions</h3>}
-            description={
-              <p>
-                PIT data is lost once it expires you have the option to keep the PIT metadata after
-                after expiration. expiration. expiration. expiration. expiration. You can also
-                choose to keep the Dashboard Object expiration. This object will be converted to an
-                Index Pattern and Pattern and it will reference data.
-              </p>
-            }
-          >
-            <EuiFormRow>
-              <>
-                <EuiCheckbox
-                  id="pit-id"
-                  label="Delete this PIT at expiration"
-                  checked={checked}
-                  onChange={(e) => onChange(e)}
-                />
-                <EuiCheckbox
-                  id="pit-id"
-                  label="Delete dependent saved objects at PIT expiration"
-                  onChange={(e) => onChange(e)}
-                  disabled={true}
-                />
-              </>
-            </EuiFormRow>
-          </EuiDescribedFormGroup>
-        </EuiForm>
-      </EuiPageContent>
+      {!isLoading ? (
+        <EditPitForm
+          existingPointInTime={pitSavedObject}
+          newProp={newProp}
+          handleSubmit={handleSubmit}
+          displayToastMessage={handleDisplayToastMessage}
+        />
+      ) : null}
     </>
   );
 };
