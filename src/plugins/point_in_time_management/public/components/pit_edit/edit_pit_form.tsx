@@ -110,6 +110,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
         id: this.state.id,
         pit_id: this.state.pit_id,
         addtime: this.state.addTime,
+        delete_on_expiry: this.state.checked,
       };
       this.setState({ isLoading: true });
 
@@ -140,13 +141,15 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
       keepAlive: this.state.keepAlive,
       id: this.state.id,
       addtime: this.state.addTime,
+      delete_on_expiry: this.state.checked,
     };
 
-    const { keepAlive, name, pit_id, id } = this.props.existingPointInTime;
+    const { keepAlive, name, pit_id, id, delete_on_expiry } = this.props.existingPointInTime;
 
     const isNameChanged: boolean = formValues.name !== name;
     const isAddTimeChanged: boolean = formValues.addtime > 0;
-    if (isNameChanged || isAddTimeChanged) {
+    const isDeleteOnExpirtChanged: boolean = formValues.delete_on_expiry !== delete_on_expiry;
+    if (isNameChanged || isAddTimeChanged || isDeleteOnExpirtChanged) {
       this.setState({ showUpdateOptions: true });
     } else {
       this.setState({ showUpdateOptions: false });
@@ -180,6 +183,11 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
   onChangePitName = (e: { target: { value: any } }) => {
     this.setState({ name: e.target.value });
     console.log(e.target.value);
+  };
+
+  onChangeDeleteObject = (e) => {
+    this.setState({ checked: e.target.checked });
+    console.log(this.state.checked);
   };
 
   renderBottomBar = () => {
@@ -321,7 +329,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
                     id="pit-id"
                     label="Delete this PIT at expiration"
                     checked={this.state.checked}
-                    onChange={(e) => this.onChange(e)}
+                    onChange={this.onChangeDeleteObject}
                   />
                   <EuiCheckbox
                     id="pit-id"

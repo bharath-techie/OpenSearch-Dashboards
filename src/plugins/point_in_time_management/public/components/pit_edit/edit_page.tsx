@@ -40,6 +40,7 @@ const defaultPitSavedObject: PointInTimeAttributes = {
   keepAlive: 0,
   name: '',
   addtime: 0,
+  delete_on_expiry: false,
 };
 
 export const PITEdit: React.FunctionComponent<RouteComponentProps<{ id: string }>> = (
@@ -72,6 +73,7 @@ export const PITEdit: React.FunctionComponent<RouteComponentProps<{ id: string }
       pit_id: tempPitSavedObject.attributes.pit_id,
       id: tempPitSavedObject.id,
       addtime: 0,
+      delete_on_expiry: tempPitSavedObject.attributes.delete_on_expiry,
     };
     console.log('This is teh attributes');
     console.log(pointInTimeAttributes);

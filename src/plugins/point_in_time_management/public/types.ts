@@ -21,6 +21,7 @@ export interface PointInTimeAttributes extends SavedObjectAttributes {
   pit_id?: string;
   id?: string;
   addtime: number;
+  delete_on_expiry: boolean;
 }
 
 export interface ToastMessageItem {

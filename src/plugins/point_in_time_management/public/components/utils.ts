@@ -107,7 +107,7 @@ export async function getSavedPits(client: SavedObjectsClientContract) {
   const savedObjects = await client.find({
     type: 'point-in-time',
     perPage: 1000,
-    fields: ['id', 'creation_time', 'keepAlive', 'name', 'pit_id'],
+    fields: ['id', 'creation_time', 'keepAlive', 'name', 'pit_id', 'delete_on_expiry'],
   });
 
   return savedObjects.savedObjects;
