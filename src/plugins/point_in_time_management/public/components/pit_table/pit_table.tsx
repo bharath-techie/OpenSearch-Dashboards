@@ -33,12 +33,7 @@ import { SavedObjectReference } from 'src/core/public';
 import { getListBreadcrumbs } from '../breadcrumbs';
 import { PointInTimeManagementContext } from '../../types';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import {
-  getDataSources,
-  PointInTime,
-  createSavedObject,
-  getSavedPits,
-} from '../utils';
+import { getDataSources, PointInTime, createSavedObject, getSavedPits } from '../utils';
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
 import { getServices, Services } from '../../services';
@@ -124,6 +119,11 @@ const PITTable = ({ history }: RouteComponentProps) => {
       });
   };
 
+  const navigateEdit = (pit) => {
+    console.log(pit);
+    history.push(`${pit.id}`);
+  };
+
   const getPits = (dataSourceId?: string) => {
     // setMessage(<>Loading PITs...</>);
     setLoading(true);
@@ -180,29 +180,42 @@ const PITTable = ({ history }: RouteComponentProps) => {
                     let formattedDate = date.format('MMM D @ HH:mm:ss');
                     const expiry = val.creation_time + val.keep_alive;
                     const dashboardPit = fetchedDashboardPits.filter(
-                      (x) => x.attributes.id === val.pit_id
+                      (x) => x.attributes.pit_id === val.pit_id
                     );
-                    console.log(dashboardPit);
+                    let isSavedObject = false;
                     if (dashboardPit.length > 0) {
-                      formattedDate = dashboardPit[0].attributes.name;
+                      isSavedObject = true;
+                      return {
+                        pit_id: val.pit_id,
+                        id: dashboardPit[0].id,
+                        name: dashboardPit[0].attributes.name,
+                        creation_time: val.creation_time,
+                        keep_alive: val.keep_alive,
+                        dataSource: dataSourceName,
+                        isSavedObject,
+                        expiry,
+                      };
                     }
-
                     return {
                       pit_id: val.pit_id,
+                      id: val.id,
                       name: formattedDate,
                       creation_time: val.creation_time,
                       keep_alive: val.keep_alive,
                       dataSource: dataSourceName,
+                      isSavedObject,
                       expiry,
                     };
                   })
                   .concat(
                     expiredPits.map((x) => ({
-                      pit_id: x.attributes.id,
+                      pit_id: x.attributes.pit_id,
                       name: x.attributes.name,
+                      id: x.id,
                       creation_time: x.attributes.creation_time,
                       keep_alive: x.attributes.keepAlive,
                       dataSource: dataSourceName,
+                      isSavedObject: true,
                       expiry: x.attributes.creation_time + x.attributes.keepAlive,
                     }))
                   )
@@ -233,11 +246,12 @@ const PITTable = ({ history }: RouteComponentProps) => {
   const createPointInTime = () => {
     // setIsFlyoutVisible(false);
     const pit: PointInTime = {
-      id:
-        'o463QQEKbXktaW5kZXgtMRZtN2RWMHdaRlNILThIMUVWWDJJMVBRABZxMlNNZVdPZVRGbVR6MUxPc1RZYkx3AAAAAAAAAAAjFmhZdDNoTk9hUlBlVng2RVNIMUNhelEBFm03ZFYwd1pGU0gtOEgxRVZYMkkxUFEAAA==',
-      keepAlive: 600000,
+      pit_id:
+        'o463QQIHdGVzdC0wMRZCaEJjeGcxUFRxdWlqR1VucTE0dkpnARZNLXdhOWdoRFJJeXFRRWp1RkdqZ05nAAAAAAAAAF09FlRNaE5OQy1LUzdTS0h5NThWY1oySkEHdGVzdC0wMRZCaEJjeGcxUFRxdWlqR1VucTE0dkpnABZNLXdhOWdoRFJJeXFRRWp1RkdqZ05nAAAAAAAAAF08FlRNaE5OQy1LUzdTS0h5NThWY1oySkEBFkJoQmN4ZzFQVHF1aWpHVW5xMTR2SmcAAA==',
+      keepAlive: 300000,
       creation_time: 1681386155468,
-      name: 'PIT-my-index-2', // Todo create pit and fill the pit id
+      name: 'PIT-my-index-2-3-new', // Todo create pit and fill the pit id
+      delete_on_expiry: false,
     };
 
     const reference: SavedObjectReference = {
@@ -361,7 +375,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
       description: 'Configure PIT',
       icon: 'pencil',
       type: 'icon',
-      onClick: fetchDataSources,
+      onClick: navigateEdit, // route it to edit page --> create a route page
     },
     {
       name: 'Delete',
@@ -658,8 +672,8 @@ const PITTable = ({ history }: RouteComponentProps) => {
           <DeleteModal />
         </EuiPageContentBody>
       </EuiPageContent>
-      {/* <EuiButton onClick={createPointInTime}>Create PIT</EuiButton>
-      <EuiButton onClick={getBackendPits}>Get PITs</EuiButton> */}
+      <EuiButton onClick={createPointInTime}>Create PIT</EuiButton>
+      <EuiButton onClick={getBackendPits}>Get PITs</EuiButton>
     </>
   );
 };

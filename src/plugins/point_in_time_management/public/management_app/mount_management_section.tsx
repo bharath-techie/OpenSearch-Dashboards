@@ -13,6 +13,7 @@ import { StartServicesAccessor } from '../../../../core/public';
 import { PointInTimeManagementContext } from '../types';
 import { OpenSearchDashboardsContextProvider } from '../../../opensearch_dashboards_react/public';
 import { PITTableWithRouter } from '../components';
+import {PITEditWithRouter} from "../components/pit_edit";
 
 export async function mountManagementSection(
   getStartServices: StartServicesAccessor<PointInTimeManagementStartDependencies>,
@@ -32,6 +33,9 @@ export async function mountManagementSection(
       <I18nProvider>
         <Router history={params.history}>
           <Switch>
+            <Route path={['/:id']}>
+              <PITEditWithRouter />
+            </Route>
             <Route path={['/']}>
               <PITTableWithRouter />
             </Route>

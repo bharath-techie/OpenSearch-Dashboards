@@ -5,6 +5,7 @@
 
 import { SavedObjectReference, SavedObjectsClientContract } from 'src/core/public';
 import { DataSourceAttributes } from 'src/plugins/data_source/common/data_sources';
+import {PointInTimeAttributes} from "../types";
 
 export async function getDataSources(savedObjectsClient: SavedObjectsClientContract) {
   return savedObjectsClient
@@ -60,8 +61,10 @@ export async function getDataSources(savedObjectsClient: SavedObjectsClientContr
 export interface PointInTime {
   name: string;
   keepAlive: number;
-  id: string;
+  pit_id: string;
   creation_time: number;
+  id?: string;
+  delete_on_expiry: boolean;
 }
 
 export async function getIndexPatterns(savedObjectsClient: SavedObjectsClientContract) {
@@ -104,7 +107,7 @@ export async function getSavedPits(client: SavedObjectsClientContract) {
   const savedObjects = await client.find({
     type: 'point-in-time',
     perPage: 1000,
-    fields: ['id', 'creation_time', 'keepAlive', 'name'],
+    fields: ['id', 'creation_time', 'keepAlive', 'name', 'pit_id', 'delete_on_expiry'],
   });
 
   return savedObjects.savedObjects;
@@ -116,26 +119,37 @@ export async function findById(client: SavedObjectsClientContract, id: string) {
     const savedObjects = await client.find({
       type: 'point-in-time',
       perPage: 1000,
-      // search: `${id}`,
-      // searchFields: ['id'],
-      fields: ['id'],
+      fields: [],
     });
-    console.log(savedObjects.savedObjects);
-    return savedObjects.savedObjects.find(
-      (obj) => obj.attributes.id.toLowerCase() === id.toLowerCase()
-    );
+    return savedObjects.savedObjects.find((obj) => obj.id === id);
   }
 }
 
+export async function updatePointInTimeById(
+  savedObjectsClient: SavedObjectsClientContract,
+  id: string,
+  attributes: PointInTimeAttributes
+) {
+  return savedObjectsClient.update('point-in-time', id, attributes);
+}
+
+export async function updatePointInTimeKeepAlive(
+  savedObjectsClient: SavedObjectsClientContract,
+  id: string,
+  addTime: number
+) {
+
+}
 export async function createSavedObject(
   pointintime: PointInTime,
   client: SavedObjectsClientContract,
   reference: SavedObjectReference
 ) {
-  const dupe = await findById(client, pointintime.id);
+  const dupe = await findById(client, pointintime.pit_id);
+  console.log("This is dupe output")
   console.log(dupe);
   if (dupe) {
-    throw new Error(`Duplicate Point in time: ${pointintime.id}`);
+    throw new Error(`Duplicate Point in time: ${pointintime.pit_id}`);
   }
   // if (dupe) {
   //     if (override) {
@@ -149,10 +163,11 @@ export async function createSavedObject(
   const references = [{ ...reference }];
   const savedObjectType = 'point-in-time';
   const response = await client.create(savedObjectType, body, {
-    id: pointintime.id,
     references,
   });
+  console.log("This is the response");
   console.log(response);
   pointintime.id = response.id;
+  console.log(pointintime);
   return pointintime;
 }
