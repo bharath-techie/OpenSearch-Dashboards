@@ -33,7 +33,14 @@ import { SavedObjectReference } from 'src/core/public';
 import { getListBreadcrumbs } from '../breadcrumbs';
 import { PointInTimeManagementContext } from '../../types';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { getDataSources, PointInTime, createSavedObject, getSavedPits } from '../utils';
+import {
+  getDataSources,
+  PointInTime,
+  createSavedObject,
+  getSavedPits,
+  deletePointInTimeById,
+  updatePointInTimeSavedObject,
+} from '../utils';
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
 import { getServices, Services } from '../../services';
@@ -51,6 +58,7 @@ export interface DashboardPitItem {
   name: string;
   creation_time: number;
   keep_alive: number;
+  delete_on_expiry: boolean;
 }
 
 export interface PitItem {
@@ -163,28 +171,54 @@ const PITTable = ({ history }: RouteComponentProps) => {
             // if (fetchedDataSources?.length) {
             //   setDashboardPits(fetchedDataSources);
             // }
-
+            console.log('dashboard pits', fetchedDashboardPits);
             setLoading(false);
             if (fetchedPits?.resp?.pits) {
-              let expiredPits: DashboardPitItem[] = [];
+              const expiredPits: DashboardPitItem[] = [];
+              // if (dataSourceId === undefined) {
+              //   expiredPits = fetchedDashboardPits.filter(
+              //     (x) => !fetchedPits?.resp?.pits.some((x2) => x.attributes.id === x2.pit_id)
+              //   );
+              // }
+              // console.log('expired', expiredPits);
+              // expiredPits.filter(x=>x.attributes.delete_on_expiry).forEach(x=> {
+              //   console.log('deleting ', x)
+              //   deletePointInTimeById(savedObjects.client, x.id);
+              // })
+
               if (dataSourceId === undefined) {
-                expiredPits = fetchedDashboardPits.filter(
-                  (x) => !fetchedPits?.resp?.pits.some((x2) => x.attributes.id === x2.pit_id)
-                );
+                fetchedDashboardPits.forEach((x) => {
+                  if (!fetchedPits?.resp?.pits.some((x2) => x.attributes.pit_id === x2.pit_id)) {
+                    if (x.attributes.delete_on_expiry) {
+                      console.log('deleting ', x);
+                      deletePointInTimeById(savedObjects.client, x.id);
+                    } else {
+                      expiredPits.push(x);
+                    }
+                  }
+                });
               }
               console.log('expired', expiredPits);
+
               setPits(
                 fetchedPits?.resp?.pits
                   .map((val) => {
                     const date = moment(val.creation_time);
-                    let formattedDate = date.format('MMM D @ HH:mm:ss');
+                    const formattedDate = date.format('MMM D @ HH:mm:ss');
                     const expiry = val.creation_time + val.keep_alive;
                     const dashboardPit = fetchedDashboardPits.filter(
                       (x) => x.attributes.pit_id === val.pit_id
                     );
-                    let isSavedObject = false;
                     if (dashboardPit.length > 0) {
-                      isSavedObject = true;
+                      console.log(dashboardPit);
+                      dashboardPit[0].attributes.keepAlive = val.keep_alive;
+                      console.log('updating', dashboardPit);
+                      updatePointInTimeSavedObject(
+                        savedObjects.client,
+                        dashboardPit[0].id,
+                        dashboardPit[0].attributes,
+                        dashboardPit[0].references
+                      );
                       return {
                         pit_id: val.pit_id,
                         id: dashboardPit[0].id,
@@ -192,7 +226,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
                         creation_time: val.creation_time,
                         keep_alive: val.keep_alive,
                         dataSource: dataSourceName,
-                        isSavedObject,
+                        isSavedObject: true,
                         expiry,
                       };
                     }
@@ -203,7 +237,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
                       creation_time: val.creation_time,
                       keep_alive: val.keep_alive,
                       dataSource: dataSourceName,
-                      isSavedObject,
+                      isSavedObject: false,
                       expiry,
                     };
                   })
@@ -247,17 +281,17 @@ const PITTable = ({ history }: RouteComponentProps) => {
     // setIsFlyoutVisible(false);
     const pit: PointInTime = {
       pit_id:
-        'o463QQIHdGVzdC0wMRZCaEJjeGcxUFRxdWlqR1VucTE0dkpnARZNLXdhOWdoRFJJeXFRRWp1RkdqZ05nAAAAAAAAAF09FlRNaE5OQy1LUzdTS0h5NThWY1oySkEHdGVzdC0wMRZCaEJjeGcxUFRxdWlqR1VucTE0dkpnABZNLXdhOWdoRFJJeXFRRWp1RkdqZ05nAAAAAAAAAF08FlRNaE5OQy1LUzdTS0h5NThWY1oySkEBFkJoQmN4ZzFQVHF1aWpHVW5xMTR2SmcAAA==',
-      keepAlive: 300000,
-      creation_time: 1681386155468,
-      name: 'PIT-my-index-2-3-new', // Todo create pit and fill the pit id
+        'o463QQEKbXktaW5kZXgtMRZqUlZFU2lSaFE1eUx0cHdiSjNLWjRRABZtWjNCdk1ZdFRZbS1JbnltaVlBTWdBAAAAAAAAAACGFlJXLVVNYXVQVFctQVIxVmh1OUJuSlEBFmpSVkVTaVJoUTV5THRwd2JKM0taNFEAAA==',
+      keepAlive: 30000000,
+      creation_time: 1684418768188,
+      name: 'PIT-my-index-1223', // Todo create pit and fill the pit id
       delete_on_expiry: false,
     };
 
     const reference: SavedObjectReference = {
-      id: 'ff959d40-b880-11e8-a6d9-e546fe2bba5f',
+      id: '5586e600-f57b-11ed-90e3-a75eeb2a18a5',
       type: 'index-pattern',
-      name: 'opensearch_dashboards_sample_data_ecommerce',
+      name: 'my*',
     };
     createSavedObject(pit, savedObjects.client, reference);
   };

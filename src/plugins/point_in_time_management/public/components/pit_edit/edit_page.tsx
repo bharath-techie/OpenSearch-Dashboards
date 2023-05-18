@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import {useEffectOnce, useMount} from 'react-use';
+import { useEffectOnce, useMount } from 'react-use';
 import { i18n } from '@osd/i18n';
 import {
   EuiBottomBar,
@@ -26,12 +26,17 @@ import {
   EuiTitle,
 } from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
-import { PointInTimeAttributes, PointInTimeManagementContext} from '../../types';
+import { PointInTimeAttributes, PointInTimeManagementContext } from '../../types';
 import { getEditBreadcrumbs } from '../breadcrumbs';
 import { EditPitForm } from './edit_pit_form';
-import {findById, findPointInTimeSavedObject, updatePointInTimeById, updatePointInTimeKeepAlive} from '../utils';
-import {ToastMessageItem} from "../../../../data_source_management/public/types";
-import {getServices, Services} from "../../services";
+import {
+  findById,
+  findPointInTimeSavedObject,
+  updatePointInTimeById,
+  updatePointInTimeKeepAlive,
+} from '../utils';
+import { ToastMessageItem } from '../../../../data_source_management/public/types';
+import { getServices, Services } from '../../services';
 
 const defaultPitSavedObject: PointInTimeAttributes = {
   pit_id: '',
@@ -46,11 +51,16 @@ const defaultPitSavedObject: PointInTimeAttributes = {
 export const PITEdit: React.FunctionComponent<RouteComponentProps<{ id: string }>> = (
   props: RouteComponentProps<{ id: string }>
 ) => {
-  const { setBreadcrumbs, savedObjects, notifications: { toasts }, http } = useOpenSearchDashboards<
-    PointInTimeManagementContext
-  >().services;
+  const {
+    setBreadcrumbs,
+    savedObjects,
+    notifications: { toasts },
+    http,
+  } = useOpenSearchDashboards<PointInTimeManagementContext>().services;
   const PitID: string = props.match.params.id;
-  const [pitSavedObject, setPitSavedObject] = useState<PointInTimeAttributes>(defaultPitSavedObject);
+  const [pitSavedObject, setPitSavedObject] = useState<PointInTimeAttributes>(
+    defaultPitSavedObject
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [newProp, setNewProp] = useState(false);
   const services: Services = getServices(http);
@@ -79,11 +89,11 @@ export const PITEdit: React.FunctionComponent<RouteComponentProps<{ id: string }
     console.log(pointInTimeAttributes);
     setPitSavedObject(pointInTimeAttributes);
     setIsLoading(false);
-  }
+  };
 
   const handleSubmit = async (attributes: PointInTimeAttributes) => {
     console.log('These are the attributes', attributes);
-    const new_keep_alive_proposal = attributes.addtime.toString() + "m";
+    const new_keep_alive_proposal = attributes.addtime.toString() + 'm';
     console.log(attributes.pit_id, new_keep_alive_proposal);
     await services.addPitTime(attributes.pit_id, new_keep_alive_proposal);
     await updatePointInTimeById(savedObjects.client, attributes.id, attributes);

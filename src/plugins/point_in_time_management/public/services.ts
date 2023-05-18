@@ -20,7 +20,7 @@ export function getServices(http: CoreStart['http']): Services {
             dataSourceId: dataSourceId ? dataSourceId : '',
           }),
         });
-        console.log("These are backend PITs");
+        console.log('These are backend PITs');
         console.log(response);
         return response;
       } catch (e) {
@@ -33,11 +33,11 @@ export function getServices(http: CoreStart['http']): Services {
         const response = await http.post('/api/pit/addTime', {
           body: JSON.stringify({
             dataSourceId: dataSourceId ? dataSourceId : 'default',
-            pit_id: pit_id,
-            keepAlive: keepAlive,
+            pit_id,
+            keepAlive,
           }),
         });
-        console.log("Updated the PIT KeepAlive");
+        console.log('Updated the PIT KeepAlive');
         console.log(response);
       } catch (e) {
         return e;

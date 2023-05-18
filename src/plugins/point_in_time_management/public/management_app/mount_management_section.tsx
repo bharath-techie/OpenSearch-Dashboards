@@ -13,7 +13,7 @@ import { StartServicesAccessor } from '../../../../core/public';
 import { PointInTimeManagementContext } from '../types';
 import { OpenSearchDashboardsContextProvider } from '../../../opensearch_dashboards_react/public';
 import { PITTableWithRouter } from '../components';
-import {PITEditWithRouter} from "../components/pit_edit";
+import { PITEditWithRouter } from '../components/pit_edit';
 
 export async function mountManagementSection(
   getStartServices: StartServicesAccessor<PointInTimeManagementStartDependencies>,

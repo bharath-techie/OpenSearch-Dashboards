@@ -79,11 +79,11 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
     if (this.props.existingPointInTime) {
       const { keepAlive, name, pit_id, id, addtime } = this.props.existingPointInTime;
       this.setState({
-        keepAlive: keepAlive,
-        name: name,
-        pit_id: pit_id,
-        id: id,
-        addtime: addtime,
+        keepAlive,
+        name,
+        pit_id,
+        id,
+        addtime,
       });
     }
   }
@@ -115,7 +115,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
       this.setState({ isLoading: true });
 
       try {
-        console.log("OnClickUpdate", formValues);
+        console.log('OnClickUpdate', formValues);
         await this.props.handleSubmit(formValues);
         this.setState({ showUpdateOptions: false });
         this.setFormValuesForEditMode();
@@ -161,8 +161,6 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
       this.didFormValuesChange();
     }, 0);
   };
-
-
 
   onChangeTimeHr = (e: { target: { value: any } }) => {
     this.setState({
@@ -268,10 +266,10 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
               <EuiFormRow>
                 <EuiFlexGroup>
                   <EuiFlexItem>
-                    <EuiFieldNumber placeholder="Hour(s)" onChange={this.onChangeTimeHr}/>
+                    <EuiFieldNumber placeholder="Hour(s)" onChange={this.onChangeTimeHr} />
                   </EuiFlexItem>
                   <EuiFlexItem>
-                    <EuiFieldNumber placeholder="Min(s)" onChange={this.onChangeTimeMin}/>
+                    <EuiFieldNumber placeholder="Min(s)" onChange={this.onChangeTimeMin} />
                   </EuiFlexItem>
                 </EuiFlexGroup>
               </EuiFormRow>

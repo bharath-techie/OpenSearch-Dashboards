@@ -5,7 +5,7 @@
 
 import { SavedObjectReference, SavedObjectsClientContract } from 'src/core/public';
 import { DataSourceAttributes } from 'src/plugins/data_source/common/data_sources';
-import {PointInTimeAttributes} from "../types";
+import { PointInTimeAttributes } from '../types';
 
 export async function getDataSources(savedObjectsClient: SavedObjectsClientContract) {
   return savedObjectsClient
@@ -133,20 +133,35 @@ export async function updatePointInTimeById(
   return savedObjectsClient.update('point-in-time', id, attributes);
 }
 
+export async function updatePointInTimeSavedObject(
+  savedObjectsClient: SavedObjectsClientContract,
+  id: string,
+  attributes: PointInTimeAttributes,
+  reference: SavedObjectReference[]
+) {
+  return savedObjectsClient.update('point-in-time', id, attributes, { references: reference });
+}
+
+export async function deletePointInTimeById(
+  savedObjectsClient: SavedObjectsClientContract,
+  id: string
+) {
+  return savedObjectsClient.delete('point-in-time', id);
+}
+
 export async function updatePointInTimeKeepAlive(
   savedObjectsClient: SavedObjectsClientContract,
   id: string,
   addTime: number
-) {
+) {}
 
-}
 export async function createSavedObject(
   pointintime: PointInTime,
   client: SavedObjectsClientContract,
   reference: SavedObjectReference
 ) {
   const dupe = await findById(client, pointintime.pit_id);
-  console.log("This is dupe output")
+  console.log('This is dupe output');
   console.log(dupe);
   if (dupe) {
     throw new Error(`Duplicate Point in time: ${pointintime.pit_id}`);
@@ -165,7 +180,7 @@ export async function createSavedObject(
   const response = await client.create(savedObjectType, body, {
     references,
   });
-  console.log("This is the response");
+  console.log('This is the response');
   console.log(response);
   pointintime.id = response.id;
   console.log(pointintime);
