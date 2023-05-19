@@ -13,18 +13,21 @@ import { StartServicesAccessor } from '../../../../core/public';
 import { PointInTimeManagementContext } from '../types';
 import { OpenSearchDashboardsContextProvider } from '../../../opensearch_dashboards_react/public';
 import { PITTableWithRouter } from '../components';
+import { PointInTimeCreateForm } from '../components/create_pit';
+import { CreatePitWithRouter } from '../components/create_pit/create_pit';
 
 export async function mountManagementSection(
   getStartServices: StartServicesAccessor<PointInTimeManagementStartDependencies>,
   params: ManagementAppMountParams
 ) {
-  const [{ chrome, application, savedObjects, notifications, http }] = await getStartServices();
+  const [{ chrome, application, savedObjects, notifications, http }, {data}] = await getStartServices();
   const deps: PointInTimeManagementContext = {
     chrome,
     application,
     notifications,
     savedObjects,
     http,
+    data,
     setBreadcrumbs: params.setBreadcrumbs,
   };
   ReactDOM.render(
@@ -32,6 +35,12 @@ export async function mountManagementSection(
       <I18nProvider>
         <Router history={params.history}>
           <Switch>
+          <Route path={['/create']}>
+              <CreatePitWithRouter/>
+            </Route>
+            {/* <Route path={['/:id']}>
+              <PointInTimeEditForm />
+            </Route> */}
             <Route path={['/']}>
               <PITTableWithRouter />
             </Route>

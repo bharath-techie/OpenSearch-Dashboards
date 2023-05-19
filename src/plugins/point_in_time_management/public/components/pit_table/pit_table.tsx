@@ -42,6 +42,8 @@ import {
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
 import { getServices, Services } from '../../services';
+import { PointInTimeCreateForm } from '../create_pit';
+import { CreateButton } from '../create_button';
 // import { dataSource } from 'src/plugins/data_source/server/saved_objects';
 
 export interface DataSourceItem {
@@ -78,6 +80,9 @@ const PITTable = ({ history }: RouteComponentProps) => {
   useMount(() => {
     setBreadcrumbs(getListBreadcrumbs());
   });
+
+  const createButton = <CreateButton history={history} dataTestSubj="createPitButton" />;
+
 
   const services: Services = getServices(http);
 
@@ -610,12 +615,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
               </EuiButton>
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
-              <EuiButton fill={true} iconType="plusInCircle" data-test-subj="createPITBtnInHeader">
-                <FormattedMessage
-                  id="pitManagement.header.createPitButton"
-                  defaultMessage="Create PIT"
-                />
-              </EuiButton>
+              {createButton}
             </EuiFlexItem>
           </EuiFlexGroup>
         </EuiPageContentHeader>

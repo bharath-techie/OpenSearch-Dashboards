@@ -274,7 +274,6 @@ export class CreateIndexPatternWizard extends Component<
 
   renderContent() {
     const { allIndices, isInitiallyLoadingIndices, step, indexPattern, dataSourceRef } = this.state;
-
     const stepInfo = {
       totalStepNumber: this.totalSteps,
       currentStepNumber: getCurrentStepNumber(step, this.dataSourceEnabled),

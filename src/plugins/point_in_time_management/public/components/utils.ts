@@ -3,8 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { SavedObjectReference, SavedObjectsClientContract } from 'src/core/public';
+import { HttpStart, SavedObjectsClientContract } from 'src/core/public';
+//import { DuplicateIndexPatternError, IndexPattern } from 'src/plugins/data/common';
 import { DataSourceAttributes } from 'src/plugins/data_source/common/data_sources';
+import { IndexPatternCreationConfig } from 'src/plugins/index_pattern_management/public';
+import { responseToItemArray } from 'src/plugins/index_pattern_management/public/components/create_index_pattern_wizard/lib/get_indices';
+import { ResolveIndexResponse } from 'src/plugins/index_pattern_management/public/components/create_index_pattern_wizard/types';
 
 export async function getDataSources(savedObjectsClient: SavedObjectsClientContract) {
   return savedObjectsClient
@@ -62,6 +66,12 @@ export interface PointInTime {
   keepAlive: number;
   id: string;
   creation_time: number;
+}
+
+export interface SavedObjectReference {
+  name?: string;
+  id: string;
+  type: string;
 }
 
 export async function getIndexPatterns(savedObjectsClient: SavedObjectsClientContract) {
@@ -156,3 +166,66 @@ export async function createSavedObject(
   pointintime.id = response.id;
   return pointintime;
 }
+export async function getIndicesViaResolve  (
+  http: HttpStart,
+  //getIndexTags: IndexPatternCreationConfig['getIndexTags'],
+  pattern: string,
+  showAllIndices: boolean,
+  dataSourceId?: string
+) {
+  const query = {} as any;
+  if (showAllIndices) {
+    query.expand_wildcards = 'all';
+  }
+  if (dataSourceId) {
+    query.data_source = dataSourceId;
+  }
+
+  return http
+    .get<ResolveIndexResponse>(`/internal/index-pattern-management/resolve_index/${pattern}`, {
+      query,
+    })
+    .then((response) => {
+      if (!response) {
+        return [];
+      } else {
+        const source: any[] | PromiseLike<any[]> = [];
+
+            (response.indices || []).forEach((index) => {
+              
+              source.push({
+                name: index.name,
+                item: index,
+              });
+            });
+        return source;
+      }
+    });
+ };
+
+ export  async function getFieldsForWildcard(indexPattern: string, capabilities: any, indexPatternsService: any) {
+
+  return await indexPatternsService!.getFieldsForWildcard({
+    pattern: indexPattern,
+    fieldCapsOptions: { allowNoIndices: true },
+  });
+}
+
+export async function createIndexPattern(indexPatternId: string, indexPatternsService: any, dataSourceRef:any) {
+  //let emptyPattern: IndexPattern;indexPatternsService
+  try {
+    return await indexPatternsService.createAndSave({
+      title: indexPatternId,
+      id: "",
+      dataSourceRef,
+    });
+  } catch (err) {
+    // if (err instanceof DuplicateIndexPatternError) {
+ 
+
+    //   return;
+    // } else {
+    //   throw err;
+    // }
+  }
+};
