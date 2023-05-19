@@ -44,7 +44,6 @@ import {
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
 import { getServices, Services } from '../../services';
-import { PointInTimeCreateForm } from '../create_pit';
 import { CreateButton } from '../create_button';
 // import { dataSource } from 'src/plugins/data_source/server/saved_objects';
 
@@ -85,7 +84,6 @@ const PITTable = ({ history }: RouteComponentProps) => {
   });
 
   const createButton = <CreateButton history={history} dataTestSubj="createPitButton" />;
-
 
   const services: Services = getServices(http);
 
@@ -662,9 +660,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
                 />
               </EuiButton>
             </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              {createButton}
-            </EuiFlexItem>
+            <EuiFlexItem grow={false}>{createButton}</EuiFlexItem>
           </EuiFlexGroup>
         </EuiPageContentHeader>
         <EuiText size="s">

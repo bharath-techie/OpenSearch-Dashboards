@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
-
 import { HttpStart, SavedObjectReference, SavedObjectsClientContract } from 'src/core/public';
 import { DataSourceAttributes } from 'src/plugins/data_source/common/data_sources';
-import { PointInTimeAttributes } from '../types';
 import { ResolveIndexResponse } from 'src/plugins/index_pattern_management/public/components/create_index_pattern_wizard/types';
+import { PointInTimeAttributes } from '../types';
 
 export async function getDataSources(savedObjectsClient: SavedObjectsClientContract) {
   return savedObjectsClient
@@ -74,7 +72,7 @@ export interface PointInTime {
 //     id: string;
 //     type: string;
 //   }
-  
+
 export async function getIndexPatterns(savedObjectsClient: SavedObjectsClientContract) {
   return (
     savedObjectsClient
@@ -194,9 +192,9 @@ export async function createSavedObject(
   console.log(pointintime);
   return pointintime;
 }
-export async function getIndicesViaResolve  (
+export async function getIndicesViaResolve(
   http: HttpStart,
-  //getIndexTags: IndexPatternCreationConfig['getIndexTags'],
+  // getIndexTags: IndexPatternCreationConfig['getIndexTags'],
   pattern: string,
   showAllIndices: boolean,
   dataSourceId?: string
@@ -219,41 +217,45 @@ export async function getIndicesViaResolve  (
       } else {
         const source: any[] | PromiseLike<any[]> = [];
 
-            (response.indices || []).forEach((index) => {
-              
-              source.push({
-                name: index.name,
-                item: index,
-              });
-            });
+        (response.indices || []).forEach((index) => {
+          source.push({
+            name: index.name,
+            item: index,
+          });
+        });
         return source;
       }
     });
- };
+}
 
- export  async function getFieldsForWildcard(indexPattern: string, capabilities: any, indexPatternsService: any) {
-
+export async function getFieldsForWildcard(
+  indexPattern: string,
+  capabilities: any,
+  indexPatternsService: any
+) {
   return await indexPatternsService!.getFieldsForWildcard({
     pattern: indexPattern,
     fieldCapsOptions: { allowNoIndices: true },
   });
 }
 
-export async function createIndexPattern(indexPatternId: string, indexPatternsService: any, dataSourceRef:any) {
-  //let emptyPattern: IndexPattern;indexPatternsService
+export async function createIndexPattern(
+  indexPatternId: string,
+  indexPatternsService: any,
+  dataSourceRef: any
+) {
+  // let emptyPattern: IndexPattern;indexPatternsService
   try {
     return await indexPatternsService.createAndSave({
       title: indexPatternId,
-      id: "",
+      id: '',
       dataSourceRef,
     });
   } catch (err) {
     // if (err instanceof DuplicateIndexPatternError) {
- 
-
     //   return;
     // } else {
     //   throw err;
     // }
   }
-};
+}
