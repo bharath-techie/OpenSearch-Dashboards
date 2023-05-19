@@ -13,6 +13,7 @@ import { NotificationsStart, SavedObjectsStart } from 'src/core/public';
 import { NavigationPublicPluginStart } from '../../navigation/public';
 import { ManagementAppMountParams } from '../../management/public';
 import { ManagementSetup } from '../../management/public';
+import { DataPublicPluginStart } from 'src/plugins/data/public';
 
 export interface PointInTimeAttributes extends SavedObjectAttributes {
   creation_time?: number;
@@ -36,6 +37,7 @@ export interface PointInTimeManagementContext {
   notifications: NotificationsStart;
   savedObjects: SavedObjectsStart;
   http: HttpSetup;
+  data: DataPublicPluginStart,
   setBreadcrumbs: ManagementAppMountParams['setBreadcrumbs'];
 }
 
