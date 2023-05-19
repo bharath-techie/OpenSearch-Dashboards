@@ -33,6 +33,14 @@ export interface IndexPatternRef {
   title: string;
 }
 
+export interface PointInTimeRef {
+  id: string;
+  title: string;
+  type: string;
+  references?: any;
+  pit_id: string;
+}
+
 export interface FieldDetails {
   error: string;
   exists: number;

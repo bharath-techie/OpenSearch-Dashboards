@@ -247,7 +247,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
     // setIsFlyoutVisible(false);
     const pit: PointInTime = {
       pit_id:
-        'o463QQIHdGVzdC0wMRZCaEJjeGcxUFRxdWlqR1VucTE0dkpnARZNLXdhOWdoRFJJeXFRRWp1RkdqZ05nAAAAAAAAAF09FlRNaE5OQy1LUzdTS0h5NThWY1oySkEHdGVzdC0wMRZCaEJjeGcxUFRxdWlqR1VucTE0dkpnABZNLXdhOWdoRFJJeXFRRWp1RkdqZ05nAAAAAAAAAF08FlRNaE5OQy1LUzdTS0h5NThWY1oySkEBFkJoQmN4ZzFQVHF1aWpHVW5xMTR2SmcAAA==',
+        'o463QQIHdGVzdC0wMRZCdWwwcGhJQVRoV2Y5TGZDSml2bGN3ARZYaFV0cmRlTlQyR2VJbldGbURJdnl3AAAAAAAAAABPFlBEcUZPNk9XVFNxSlNyVVhoTVdBNmcHdGVzdC0wMRZCdWwwcGhJQVRoV2Y5TGZDSml2bGN3ABZYaFV0cmRlTlQyR2VJbldGbURJdnl3AAAAAAAAAABOFlBEcUZPNk9XVFNxSlNyVVhoTVdBNmcBFkJ1bDBwaElBVGhXZjlMZkNKaXZsY3cAAA==',
       keepAlive: 300000,
       creation_time: 1681386155468,
       name: 'PIT-my-index-2-3-new', // Todo create pit and fill the pit id
