@@ -15,3 +15,15 @@ export function getListBreadcrumbs() {
     },
   ];
 }
+
+export function getEditBreadcrumbs() {
+  return [
+    ...getListBreadcrumbs(),
+    {
+      text: i18n.translate('dataSourcesManagement.dataSources.createBreadcrumb', {
+        defaultMessage: 'Edit',
+      }),
+      href: `/edit`,
+    },
+  ];
+}

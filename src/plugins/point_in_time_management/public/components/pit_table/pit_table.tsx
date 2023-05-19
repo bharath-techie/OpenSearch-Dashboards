@@ -38,11 +38,12 @@ import {
   PointInTime,
   createSavedObject,
   getSavedPits,
+  deletePointInTimeById,
+  updatePointInTimeSavedObject,
 } from '../utils';
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
 import { getServices, Services } from '../../services';
-import { PointInTimeCreateForm } from '../create_pit';
 import { CreateButton } from '../create_button';
 // import { dataSource } from 'src/plugins/data_source/server/saved_objects';
 
@@ -58,6 +59,7 @@ export interface DashboardPitItem {
   name: string;
   creation_time: number;
   keep_alive: number;
+  delete_on_expiry: boolean;
 }
 
 export interface PitItem {
@@ -82,7 +84,6 @@ const PITTable = ({ history }: RouteComponentProps) => {
   });
 
   const createButton = <CreateButton history={history} dataTestSubj="createPitButton" />;
-
 
   const services: Services = getServices(http);
 
@@ -129,6 +130,11 @@ const PITTable = ({ history }: RouteComponentProps) => {
       });
   };
 
+  const navigateEdit = (pit) => {
+    console.log(pit);
+    history.push(`${pit.id}`);
+  };
+
   const getPits = (dataSourceId?: string) => {
     // setMessage(<>Loading PITs...</>);
     setLoading(true);
@@ -168,46 +174,85 @@ const PITTable = ({ history }: RouteComponentProps) => {
             // if (fetchedDataSources?.length) {
             //   setDashboardPits(fetchedDataSources);
             // }
-
+            console.log('dashboard pits', fetchedDashboardPits);
             setLoading(false);
             if (fetchedPits?.resp?.pits) {
-              let expiredPits: DashboardPitItem[] = [];
+              const expiredPits: DashboardPitItem[] = [];
+              // if (dataSourceId === undefined) {
+              //   expiredPits = fetchedDashboardPits.filter(
+              //     (x) => !fetchedPits?.resp?.pits.some((x2) => x.attributes.id === x2.pit_id)
+              //   );
+              // }
+              // console.log('expired', expiredPits);
+              // expiredPits.filter(x=>x.attributes.delete_on_expiry).forEach(x=> {
+              //   console.log('deleting ', x)
+              //   deletePointInTimeById(savedObjects.client, x.id);
+              // })
+
               if (dataSourceId === undefined) {
-                expiredPits = fetchedDashboardPits.filter(
-                  (x) => !fetchedPits?.resp?.pits.some((x2) => x.attributes.id === x2.pit_id)
-                );
+                fetchedDashboardPits.forEach((x) => {
+                  if (!fetchedPits?.resp?.pits.some((x2) => x.attributes.pit_id === x2.pit_id)) {
+                    if (x.attributes.delete_on_expiry) {
+                      console.log('deleting ', x);
+                      deletePointInTimeById(savedObjects.client, x.id);
+                    } else {
+                      expiredPits.push(x);
+                    }
+                  }
+                });
               }
               console.log('expired', expiredPits);
+
               setPits(
                 fetchedPits?.resp?.pits
                   .map((val) => {
                     const date = moment(val.creation_time);
-                    let formattedDate = date.format('MMM D @ HH:mm:ss');
+                    const formattedDate = date.format('MMM D @ HH:mm:ss');
                     const expiry = val.creation_time + val.keep_alive;
                     const dashboardPit = fetchedDashboardPits.filter(
-                      (x) => x.attributes.id === val.pit_id
+                      (x) => x.attributes.pit_id === val.pit_id
                     );
-                    console.log(dashboardPit);
                     if (dashboardPit.length > 0) {
-                      formattedDate = dashboardPit[0].attributes.name;
+                      console.log(dashboardPit);
+                      dashboardPit[0].attributes.keepAlive = val.keep_alive;
+                      console.log('updating', dashboardPit);
+                      updatePointInTimeSavedObject(
+                        savedObjects.client,
+                        dashboardPit[0].id,
+                        dashboardPit[0].attributes,
+                        dashboardPit[0].references
+                      );
+                      return {
+                        pit_id: val.pit_id,
+                        id: dashboardPit[0].id,
+                        name: dashboardPit[0].attributes.name,
+                        creation_time: val.creation_time,
+                        keep_alive: val.keep_alive,
+                        dataSource: dataSourceName,
+                        isSavedObject: true,
+                        expiry,
+                      };
                     }
-
                     return {
                       pit_id: val.pit_id,
+                      id: val.id,
                       name: formattedDate,
                       creation_time: val.creation_time,
                       keep_alive: val.keep_alive,
                       dataSource: dataSourceName,
+                      isSavedObject: false,
                       expiry,
                     };
                   })
                   .concat(
                     expiredPits.map((x) => ({
-                      pit_id: x.attributes.id,
+                      pit_id: x.attributes.pit_id,
                       name: x.attributes.name,
+                      id: x.id,
                       creation_time: x.attributes.creation_time,
                       keep_alive: x.attributes.keepAlive,
                       dataSource: dataSourceName,
+                      isSavedObject: true,
                       expiry: x.attributes.creation_time + x.attributes.keepAlive,
                     }))
                   )
@@ -238,17 +283,18 @@ const PITTable = ({ history }: RouteComponentProps) => {
   const createPointInTime = () => {
     // setIsFlyoutVisible(false);
     const pit: PointInTime = {
-      id:
-        'o463QQEKbXktaW5kZXgtMRZtN2RWMHdaRlNILThIMUVWWDJJMVBRABZxMlNNZVdPZVRGbVR6MUxPc1RZYkx3AAAAAAAAAAAjFmhZdDNoTk9hUlBlVng2RVNIMUNhelEBFm03ZFYwd1pGU0gtOEgxRVZYMkkxUFEAAA==',
-      keepAlive: 600000,
-      creation_time: 1681386155468,
-      name: 'PIT-my-index-2', // Todo create pit and fill the pit id
+      pit_id:
+        'o463QQEKbXktaW5kZXgtMRZqUlZFU2lSaFE1eUx0cHdiSjNLWjRRABZtWjNCdk1ZdFRZbS1JbnltaVlBTWdBAAAAAAAAAACGFlJXLVVNYXVQVFctQVIxVmh1OUJuSlEBFmpSVkVTaVJoUTV5THRwd2JKM0taNFEAAA==',
+      keepAlive: 30000000,
+      creation_time: 1684418768188,
+      name: 'PIT-my-index-1223', // Todo create pit and fill the pit id
+      delete_on_expiry: false,
     };
 
     const reference: SavedObjectReference = {
-      id: 'ff959d40-b880-11e8-a6d9-e546fe2bba5f',
+      id: '5586e600-f57b-11ed-90e3-a75eeb2a18a5',
       type: 'index-pattern',
-      name: 'opensearch_dashboards_sample_data_ecommerce',
+      name: 'my*',
     };
     createSavedObject(pit, savedObjects.client, reference);
   };
@@ -280,7 +326,13 @@ const PITTable = ({ history }: RouteComponentProps) => {
     }
     services.deletePits([pit.pit_id], dataSourceId).then((deletedPits) => {
       console.log(deletedPits);
-      getPits(dataSource);
+      if (pit.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, pit.id).then(() => {
+          getPits(dataSource);
+        });
+      } else {
+        getPits(dataSource);
+      }
     });
   };
 
@@ -366,7 +418,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
       description: 'Configure PIT',
       icon: 'pencil',
       type: 'icon',
-      onClick: fetchDataSources,
+      onClick: navigateEdit, // route it to edit page --> create a route page
     },
     {
       name: 'Delete',
@@ -485,6 +537,12 @@ const PITTable = ({ history }: RouteComponentProps) => {
         console.log(deletedPits);
         getPits(dataSource);
       });
+
+    selectedPits.forEach((x) => {
+      if (x.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, x.id);
+      }
+    });
   };
 
   const renderToolsRight = () => {
@@ -614,9 +672,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
                 />
               </EuiButton>
             </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              {createButton}
-            </EuiFlexItem>
+            <EuiFlexItem grow={false}>{createButton}</EuiFlexItem>
           </EuiFlexGroup>
         </EuiPageContentHeader>
         <EuiText size="s">

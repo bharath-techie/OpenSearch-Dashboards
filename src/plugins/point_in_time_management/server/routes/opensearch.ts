@@ -44,6 +44,46 @@ export function registerPitRoutes(router: IRouter) {
 
   router.post(
     {
+      path: '/api/pit/addTime',
+      validate: {
+        body: schema.object({
+          dataSourceId: schema.string(),
+          pit_id: schema.string(),
+          keepAlive: schema.string(),
+        }),
+      },
+    },
+    async (context, req, res) => {
+      const client: OpenSearchClient = await getClient(req, context);
+      console.log(req.body);
+      try {
+        const response = await client.search({
+          body: {
+            size: 0,
+            pit: {
+              id: req.body.pit_id,
+              keep_alive: req.body.keepAlive,
+            },
+          },
+        });
+        return res.ok({
+          body: {
+            ok: true,
+            resp: response.body,
+          },
+        });
+      } catch (err: any) {
+        return res.ok({
+          body: {
+            ok: false,
+            resp: err.message,
+          },
+        });
+      }
+    }
+  );
+  router.post(
+    {
       path: '/api/pit/delete',
       validate: {
         body: schema.object({
@@ -80,12 +120,10 @@ export function registerPitRoutes(router: IRouter) {
         params: schema.object({
           index: schema.string(),
         }),
-        query: schema.object(
-          {
-            allowPartialFailures: schema.boolean({ defaultValue: true }),
-            keepAlive: schema.string()
-          },
-        ),
+        query: schema.object({
+          allowPartialFailures: schema.boolean({ defaultValue: true }),
+          keepAlive: schema.string(),
+        }),
         body: schema.object({
           dataSourceId: schema.string(),
         }),
@@ -95,17 +133,18 @@ export function registerPitRoutes(router: IRouter) {
       console.log('This is the request for create point in time path');
       console.log(request);
       const { index } = request.params;
-      const {keepAlive, allowPartialFailures} = request.query
+      const { keepAlive, allowPartialFailures } = request.query;
       console.log(index);
       console.log(context);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       debugger;
       const client: OpenSearchClient = await getClient(request, context);
-      
-      const response_local = await client.createPit({
+
+      const response_local = await client.createPit(
+        {
           index,
           keep_alive: keepAlive,
-          allow_partial_pit_creation: allowPartialFailures
+          allow_partial_pit_creation: allowPartialFailures,
         },
         {}
       );
@@ -136,4 +175,3 @@ async function getClient(
 function trimEnd(arg0: string, arg1: string) {
   throw new Error('Function not implemented.');
 }
-

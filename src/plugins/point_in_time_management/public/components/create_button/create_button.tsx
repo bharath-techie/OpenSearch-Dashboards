@@ -22,10 +22,7 @@ export const CreateButton = ({ history, isEmptyState, dataTestSubj }: Props) => 
       fill={isEmptyState ? false : true}
       onClick={() => history.push('/create')}
     >
-      <FormattedMessage
-        id="pit.createButton"
-        defaultMessage="Create point in time"
-      />
+      <FormattedMessage id="pit.createButton" defaultMessage="Create point in time" />
     </EuiButton>
   );
 };
