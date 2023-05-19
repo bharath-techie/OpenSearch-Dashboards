@@ -294,31 +294,35 @@ export const PointInTimeCreateForm = ({ history }) => {
 
         if (showIndices) {
             const indices = selectedIndexOptions.flatMap(a => a.label).join(",");
-            const dataSource1  = {
+            debugger;
+            let indexPattern = indexPatterns.find(x=>x.title == indices);
+            const ds  = {
                 id: dataSource,
                 type: "data-source",
                 name: "DataSource",
             }
-            // const dataSource: export interface SavedObjectReference {
-            //     name?: string;
-            //     id: string;
-            //     type: string;
-            //   }
-              
-            const createip = await createIndexPattern(indices, data.indexPatterns, dataSource1)
-            const indexPatternId = createip.id;
-            const pit: PointInTime = {
-                name: pitName,
-                keepAlive: keepAlive,
-                id: 'id1', // Todo create pit and fill the pit id,
-                indices: indices
+            if(!indexPattern) {
+                indexPattern = await createIndexPattern(indices, data.indexPatterns, ds)
             }
+            const indexPatternId = indexPattern.id;
+            
             const reference: SavedObjectReference = {
                 id: indexPatternId,
                 type: 'index-pattern',
                 name: indexPatternId
             }
-            await createSavedObject(pit, savedObjects.client, reference, dataSource, http)
+            const service = getServices(http);
+            const createdPit = await service.createPit(indices, keepAlive, true, dataSource );
+            
+            if(makedashboardschecked) {
+                const pit: PointInTime = {
+                    name: pitName,
+                    keepAlive: keepAlive,
+                    id:  createdPit.pit_id, // Todo create pit and fill the pit id,
+                    indices: indices
+                }
+                await createSavedObject(pit, savedObjects.client, reference, dataSource, http);
+            }
             history.push('');
         } else {
             const indexPattern = indexPatterns.find(x=>x.id == selectedIndexPattern);
@@ -334,7 +338,17 @@ export const PointInTimeCreateForm = ({ history }) => {
                 type: 'index-pattern',
                 name: indexPattern.title
             }
-            await createSavedObject(pit, savedObjects.client, reference, dataSource, http)
+            const service = getServices(http);
+            const createdPit = await service.createPit(pit.indices, pit.keepAlive, true, dataSource );
+            if(makedashboardschecked) {
+                const pit: PointInTime = {
+                    name: pitName,
+                    keepAlive: keepAlive,
+                    id:  createdPit.pit_id, // Todo create pit and fill the pit id,
+                    indices: indexPattern.title 
+                }
+                await createSavedObject(pit, savedObjects.client, reference, dataSource, http);
+            }
             history.push('');
         }
         //setIsFlyoutVisible(false);
