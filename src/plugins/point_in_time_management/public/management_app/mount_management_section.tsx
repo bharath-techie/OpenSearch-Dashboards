@@ -13,7 +13,7 @@ import { StartServicesAccessor } from '../../../../core/public';
 import { PointInTimeManagementContext } from '../types';
 import { OpenSearchDashboardsContextProvider } from '../../../opensearch_dashboards_react/public';
 import { PITTableWithRouter } from '../components';
-import { PointInTimeCreateForm } from '../components/create_pit';
+import { PITEditWithRouter } from '../components/pit_edit';
 import { CreatePitWithRouter } from '../components/create_pit/create_pit';
 
 export async function mountManagementSection(
@@ -38,6 +38,10 @@ export async function mountManagementSection(
           <Route path={['/create']}>
               <CreatePitWithRouter/>
             </Route>
+            <Route path={['/:id']}>
+              <PITEditWithRouter />
+            </Route>
+
             {/* <Route path={['/:id']}>
               <PointInTimeEditForm />
             </Route> */}

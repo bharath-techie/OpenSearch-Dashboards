@@ -44,6 +44,46 @@ export function registerPitRoutes(router: IRouter) {
 
   router.post(
     {
+      path: '/api/pit/addTime',
+      validate: {
+        body: schema.object({
+          dataSourceId: schema.string(),
+          pit_id: schema.string(),
+          keepAlive: schema.string(),
+        }),
+      },
+    },
+    async (context, req, res) => {
+      const client: OpenSearchClient = await getClient(req, context);
+      console.log(req.body);
+      try {
+        const response = await client.search({
+          body: {
+            size: 0,
+            pit: {
+              id: req.body.pit_id,
+              keep_alive: req.body.keepAlive,
+            },
+          },
+        });
+        return res.ok({
+          body: {
+            ok: true,
+            resp: response.body,
+          },
+        });
+      } catch (err: any) {
+        return res.ok({
+          body: {
+            ok: false,
+            resp: err.message,
+          },
+        });
+      }
+    }
+  );
+  router.post(
+    {
       path: '/api/pit/delete',
       validate: {
         body: schema.object({
