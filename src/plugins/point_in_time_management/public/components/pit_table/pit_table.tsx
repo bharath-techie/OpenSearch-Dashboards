@@ -326,7 +326,13 @@ const PITTable = ({ history }: RouteComponentProps) => {
     }
     services.deletePits([pit.pit_id], dataSourceId).then((deletedPits) => {
       console.log(deletedPits);
-      getPits(dataSource);
+      if (pit.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, pit.id).then(() => {
+          getPits(dataSource);
+        });
+      } else {
+        getPits(dataSource);
+      }
     });
   };
 
@@ -531,6 +537,12 @@ const PITTable = ({ history }: RouteComponentProps) => {
         console.log(deletedPits);
         getPits(dataSource);
       });
+
+    selectedPits.forEach((x) => {
+      if (x.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, x.id);
+      }
+    });
   };
 
   const renderToolsRight = () => {
