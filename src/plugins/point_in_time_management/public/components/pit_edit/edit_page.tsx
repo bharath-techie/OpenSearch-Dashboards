@@ -30,6 +30,7 @@ import { PointInTimeAttributes, PointInTimeManagementContext } from '../../types
 import { getEditBreadcrumbs } from '../breadcrumbs';
 import { EditPitForm } from './edit_pit_form';
 import {
+  createPit,
   findById,
   findPointInTimeSavedObject,
   updatePointInTimeById,
@@ -46,6 +47,7 @@ const defaultPitSavedObject: PointInTimeAttributes = {
   name: '',
   addtime: 0,
   delete_on_expiry: false,
+  isSavedObject: true,
 };
 
 export const PITEdit = (
@@ -60,6 +62,7 @@ export const PITEdit = (
   const PitID: string = props.match.params.id;
   const pit = props.location && props.location.state;
   console.log(pit);
+  console.log(props.location.state);
   debugger;
   const [pitSavedObject, setPitSavedObject] = useState<PointInTimeAttributes>(
     defaultPitSavedObject
@@ -77,29 +80,60 @@ export const PITEdit = (
   });
 
   const fetchPitSavedObject = async () => {
-    const tempPitSavedObject = await findById(savedObjects.client, PitID);
-    setNewProp(true);
-    const pointInTimeAttributes: PointInTimeAttributes = {
-      creation_time: tempPitSavedObject.attributes.creation_time,
-      name: tempPitSavedObject.attributes.name,
-      keepAlive: tempPitSavedObject.attributes.keepAlive,
-      pit_id: tempPitSavedObject.attributes.pit_id,
-      id: tempPitSavedObject.id,
-      addtime: 0,
-      delete_on_expiry: tempPitSavedObject.attributes.delete_on_expiry,
-    };
-    console.log('This is teh attributes');
-    console.log(pointInTimeAttributes);
-    setPitSavedObject(pointInTimeAttributes);
-    setIsLoading(false);
+    if(pit.isSavedObject) {
+      const tempPitSavedObject = await findById(savedObjects.client, PitID);
+      setNewProp(true);
+      const pointInTimeAttributes: PointInTimeAttributes = {
+        creation_time: tempPitSavedObject.attributes.creation_time,
+        name: tempPitSavedObject.attributes.name,
+        keepAlive: tempPitSavedObject.attributes.keepAlive,
+        pit_id: tempPitSavedObject.attributes.pit_id,
+        id: tempPitSavedObject.id,
+        addtime: 0,
+        delete_on_expiry: tempPitSavedObject.attributes.delete_on_expiry,
+        isSavedObject: true,
+      };
+      console.log('This is teh attributes');
+      console.log(pointInTimeAttributes);
+      setPitSavedObject(pointInTimeAttributes);
+      setIsLoading(false);
+    } else {
+      const pointInTimeAttributes: PointInTimeAttributes = {
+        creation_time: pit.creation_time,
+        name: '',
+        keepAlive: pit.keep_alive,
+        pit_id: pit.pit_id,
+        addtime: 0,
+        delete_on_expiry: false,
+        isSavedObject: false,
+      };
+      console.log("For a local PIT these are the variables");
+      console.log(pointInTimeAttributes);
+      setPitSavedObject(pointInTimeAttributes);
+      setIsLoading(false);
+    }
+
   };
 
   const handleSubmit = async (attributes: PointInTimeAttributes) => {
-    console.log('These are the attributes', attributes);
-    const new_keep_alive_proposal = attributes.addtime.toString() + 'm';
-    console.log(attributes.pit_id, new_keep_alive_proposal);
-    await services.addPitTime(attributes.pit_id, new_keep_alive_proposal);
-    await updatePointInTimeById(savedObjects.client, attributes.id, attributes);
+    if(attributes.isSavedObject){
+      console.log('These are the attributes', attributes);
+      const new_keep_alive_proposal = attributes.addtime.toString() + 'm';
+      console.log(attributes.pit_id, new_keep_alive_proposal);
+      await services.addPitTime(attributes.pit_id, new_keep_alive_proposal);
+      await updatePointInTimeById(savedObjects.client, attributes.id, attributes);
+      props.history.push('/');
+    } else {
+      console.log(attributes);
+      console.log("This is not saved object");
+      // TODO:: Need to call the create PIT ID here.
+      await createPit(
+        ['opensearch_dashboards_sample_data_ecommerce'],
+        'opensearch_dashboards_sample_data_ecommerce', indexPatterns, dataSource, data,
+        http, keepAlive, makedashboardschecked, pitName, savedObjects, deletepitchecked)
+      props.history.push('/');
+    }
+
   };
 
   const handleDisplayToastMessage = ({ id, defaultMessage, success }: ToastMessageItem) => {
@@ -112,7 +146,7 @@ export const PITEdit = (
 
   return (
     <>
-      {!isLoading ? (
+      {pitSavedObject.creation_time !== 0 ? (
         <EditPitForm
           existingPointInTime={pitSavedObject}
           newProp={newProp}

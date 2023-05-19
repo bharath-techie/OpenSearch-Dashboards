@@ -23,6 +23,7 @@ export interface PointInTimeAttributes extends SavedObjectAttributes {
   id?: string;
   addtime: number;
   delete_on_expiry: boolean;
+  isSavedObject?: boolean;
 }
 
 export interface ToastMessageItem {
