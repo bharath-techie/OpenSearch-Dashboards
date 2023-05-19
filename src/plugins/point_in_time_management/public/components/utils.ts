@@ -5,10 +5,13 @@
 
 
 
-import { HttpStart, SavedObjectReference, SavedObjectsClientContract } from 'src/core/public';
+import { HttpSetup, HttpStart, SavedObjectReference, SavedObjectsClientContract, SavedObjectsStart } from 'src/core/public';
 import { DataSourceAttributes } from 'src/plugins/data_source/common/data_sources';
 import { PointInTimeAttributes } from '../types';
 import { ResolveIndexResponse } from 'src/plugins/index_pattern_management/public/components/create_index_pattern_wizard/types';
+import { getServices } from '../services';
+import { DataPublicPluginStart } from 'src/plugins/data/public';
+import { PointInTimeFlyoutItem } from './create_pit/create_pit';
 
 export async function getDataSources(savedObjectsClient: SavedObjectsClientContract) {
   return savedObjectsClient
@@ -34,33 +37,6 @@ export async function getDataSources(savedObjectsClient: SavedObjectsClientContr
     });
 }
 
-// export async function getDashboardPits(savedObjectsClient: SavedObjectsClientContract) {
-//   return savedObjectsClient
-//     .find<DataSourceAttributes>({
-//       type: 'data-source',
-//       fields: ['title', 'id'],
-//       perPage: 10000,
-//     })
-//     .then((response) => {
-//       return [
-//         {
-//           name: 'PIT-my-index-1',
-//           id:
-//             'o463QQEKbXktaW5kZXgtMRZtN2RWMHdaRlNILThIMUVWWDJJMVBRABZxMlNNZVdPZVRGbVR6MUxPc1RZYkx3AAAAAAAAAAAiFmhZdDNoTk9hUlBlVng2RVNIMUNhelEBFm03ZFYwd1pGU0gtOEgxRVZYMkkxUFEAAA==',
-//           creation_time: 1681386155468,
-//           keep_alive: 600000,
-//         },
-//         {
-//           name: 'PIT-my-index-2',
-//           id:
-//             'o463QQEKbXktaW5kZXgtMRZtN2RWMHdaRlNILThIMUVWWDJJMVBRABZxMlNNZVdPZVRGbVR6MUxPc1RZYkx3AAAAAAAAAAAjFmhZdDNoTk9hUlBlVng2RVNIMUNhelEBFm03ZFYwd1pGU0gtOEgxRVZYMkkxUFEAAA==',
-//           creation_time: 1681386155468,
-//           keep_alive: 600000,
-//         },
-//       ];
-//     });
-// }
-
 export interface PointInTime {
   name: string;
   keepAlive: number;
@@ -69,12 +45,7 @@ export interface PointInTime {
   id?: string;
   delete_on_expiry: boolean;
 }
-// export interface SavedObjectReference {
-//     name?: string;
-//     id: string;
-//     type: string;
-//   }
-  
+
 export async function getIndexPatterns(savedObjectsClient: SavedObjectsClientContract) {
   return (
     savedObjectsClient
@@ -161,7 +132,7 @@ export async function updatePointInTimeKeepAlive(
   savedObjectsClient: SavedObjectsClientContract,
   id: string,
   addTime: number
-) {}
+) { }
 
 export async function createSavedObject(
   pointintime: PointInTime,
@@ -174,13 +145,6 @@ export async function createSavedObject(
   if (dupe) {
     throw new Error(`Duplicate Point in time: ${pointintime.pit_id}`);
   }
-  // if (dupe) {
-  //     if (override) {
-  //         await this.delete(dupe.id);
-  //     } else {
-  //         throw new DuplicateIndexPatternError(`Duplicate index pattern: ${indexPattern.title}`);
-  //     }
-  // }
 
   const body = pointintime;
   const references = [{ ...reference }];
@@ -194,7 +158,7 @@ export async function createSavedObject(
   console.log(pointintime);
   return pointintime;
 }
-export async function getIndicesViaResolve  (
+export async function getIndicesViaResolve(
   http: HttpStart,
   //getIndexTags: IndexPatternCreationConfig['getIndexTags'],
   pattern: string,
@@ -219,19 +183,19 @@ export async function getIndicesViaResolve  (
       } else {
         const source: any[] | PromiseLike<any[]> = [];
 
-            (response.indices || []).forEach((index) => {
-              
-              source.push({
-                name: index.name,
-                item: index,
-              });
-            });
+        (response.indices || []).forEach((index) => {
+
+          source.push({
+            name: index.name,
+            item: index,
+          });
+        });
         return source;
       }
     });
- };
+};
 
- export  async function getFieldsForWildcard(indexPattern: string, capabilities: any, indexPatternsService: any) {
+export async function getFieldsForWildcard(indexPattern: string, capabilities: any, indexPatternsService: any) {
 
   return await indexPatternsService!.getFieldsForWildcard({
     pattern: indexPattern,
@@ -239,21 +203,67 @@ export async function getIndicesViaResolve  (
   });
 }
 
-export async function createIndexPattern(indexPatternId: string, indexPatternsService: any, dataSourceRef:any) {
-  //let emptyPattern: IndexPattern;indexPatternsService
+export async function createIndexPattern(indexPatternTitle: string, indexPatternsService: any, dataSourceRef: any) {
   try {
     return await indexPatternsService.createAndSave({
-      title: indexPatternId,
+      title: indexPatternTitle,
       id: "",
       dataSourceRef,
     });
   } catch (err) {
-    // if (err instanceof DuplicateIndexPatternError) {
- 
-
-    //   return;
-    // } else {
-    //   throw err;
-    // }
+    throw err;
   }
 };
+
+export async function createPitSavedObject(pointintime, client, reference) {
+  const body = pointintime;
+  body.id = pointintime.id;
+  body.title = pointintime.name;
+  body.name = pointintime.name;
+  const references = [{ ...reference }];
+  const savedObjectType = "point-in-time";
+  return await client.create(savedObjectType, body, {
+    references,
+  });
+}
+
+export async function createPit(selectedIndexOptions, selectedIndexPattern, indexPatterns: PointInTimeFlyoutItem[], 
+  dataSource: string, data: DataPublicPluginStart, http: HttpSetup, keepAlive: string, 
+  makedashboardschecked: boolean, pitName: string, savedObjects: SavedObjectsStart, deletepitchecked: boolean) {
+      let indexPatternObj;
+  if (selectedIndexOptions.length > 0) {
+      const indices = selectedIndexOptions.flatMap(a => a.label).join(",");
+      indexPatternObj = indexPatterns.find(x => x.title == indices);
+      const ds = {
+          id: dataSource,
+          type: "data-source",
+          name: "DataSource",
+      };
+      if (!indexPatternObj) {
+          indexPatternObj = await createIndexPattern(indices, data.indexPatterns, ds);
+      }
+  } else {
+      indexPatternObj = indexPatterns.find(x => x.id == selectedIndexPattern);
+  }
+
+  const reference: SavedObjectReference = {
+      id: indexPatternObj.id,
+      type: 'index-pattern',
+      name: indexPatternObj.title
+  };
+  const service = getServices(http);
+  const createdPit = await service.createPit(indexPatternObj.title, keepAlive, true, dataSource);
+  if (makedashboardschecked) {
+      const pit: PointInTime = {
+          name: pitName,
+          keepAlive: createdPit.keep_alive,
+          pit_id: createdPit.pit_id,
+          creation_time: createdPit.creation_time,
+          delete_on_expiry: deletepitchecked,
+          id: '',
+      };
+      await createSavedObject(pit, savedObjects.client, reference);
+  }
+}
+
+

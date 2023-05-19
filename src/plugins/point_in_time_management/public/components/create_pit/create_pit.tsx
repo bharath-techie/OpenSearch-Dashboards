@@ -25,9 +25,10 @@ import { DataPublicPluginStart } from 'src/plugins/data/public';
 import { ManagementAppMountParams } from 'src/plugins/management/public';
 import { DataSourceItem } from '../pit_table/pit_table';
 import { useEffectOnce } from 'react-use';
-import { createIndexPattern, getDataSources, getFieldsForWildcard, getIndicesViaResolve } from '../utils';
+import { createPit, getDataSources, getIndicesViaResolve } from '../utils';
 import { withRouter } from 'react-router-dom';
-import { getServices } from '../../services';
+import { i18n } from '@osd/i18n';
+import { getCreateBreadcrumbs } from '../breadcrumbs';
 
 
 export interface PointInTimeFlyoutItem {
@@ -59,12 +60,6 @@ export interface SavedObjectReference {
     id: string;
     type: string;
 }
-export interface PointInTime {
-    name: string,
-    keepAlive: string,
-    id: string,
-    indices: string
-}
 
 export async function getPits(client, title: string) {
     if (title) {
@@ -78,50 +73,15 @@ export async function getPits(client, title: string) {
     }
 }
 
-
-export async function createSavedObject(pointintime, client, reference, dataSourceId, http) {
-    // const dupe = await findByTitle(client, pointintime.name);
-    // debugger;
-    // console.log(dupe);
-    // if (dupe) {
-    //     throw new Error(`Duplicate Point in time: ${pointintime.name}`);
-    // }
-    const services1 = getServices(http);
-    const pit = await services1.createPit(pointintime.indices, pointintime.keepAlive, true, dataSourceId )
-
-    // if (dupe) {
-    //     if (override) {
-    //         await this.delete(dupe.id);
-    //     } else {
-    //         throw new DuplicateIndexPatternError(`Duplicate index pattern: ${indexPattern.title}`);
-    //     }
-    // }
-
-
-    const body = pit;
-    body.id = pit.pit_id;
-    body.title = pointintime.name;
-    body.name = pointintime.name;
-    const references = [{ ...reference }];
-    const savedObjectType = "point-in-time";
-    const response = await client.create(savedObjectType, body, {
-        references,
-    });
-    console.log(response);
-    pit.id = response.id;
-    return pit;
-}
-
-
 export async function findByTitle(client, title: string) {
     if (title) {
         const savedObjects = await client.find({
             type: 'point-in-time',
             perPage: 1000,
-            fields: ['id']
+            fields: []
         });
 
-        return savedObjects.savedObjects.find((obj) => obj.attributes.id.toLowerCase() === title.toLowerCase());
+        return savedObjects.savedObjects.find((obj) => obj && obj.attributes && obj.attributes.name && obj.attributes.name.toLowerCase() === title.toLowerCase());
     }
 }
 
@@ -201,10 +161,7 @@ export const PointInTimeCreateForm = ({ history }) => {
     const {
         setBreadcrumbs,
         savedObjects,
-        uiSettings,
-        chrome,
-        docLinks,
-        application,
+        notifications: { toasts },
         http,
         data,
     } = useOpenSearchDashboards<IndexPatternManagmentContext>().services;
@@ -212,48 +169,34 @@ export const PointInTimeCreateForm = ({ history }) => {
     const onChange = (e) => {
         setKeepAliveTime(e.target.value);
     };
-    const onDropDownChange = (e) => {
-        setSelectedIndexPattern(e.target.value);
-    }
-    console.log(useOpenSearchDashboards().services);
-    console.log(savedObjects);
 
     useEffectOnce(() => {
         fetchDataSources();
 
     });
-    let indexpatterns;
 
     useEffect(() => {
         (async function () {
             const gettedIndexPatterns = await getIndexPatterns(
                 savedObjects.client
             );
-            var names = gettedIndexPatterns.map(function (item) {
-                return item['title'];
-            });
             // filter the index pattern w.r.t data source selected
             const dsIndexPatterns = gettedIndexPatterns.filter(x => x.datasource == dataSource)
             setIndexPatterns(dsIndexPatterns);
             if (dsIndexPatterns.length > 0) {
                 setSelectedIndexPattern(dsIndexPatterns[0].id)
             } else {
-                setSelectedIndexPattern('')
+                setSelectedIndexPattern('');
             }
             console.log(gettedIndexPatterns)
-            indexpatterns = data.indexPatterns;
-            // debugger;
-            // const fields = await getFieldsForWildcard("*", "", indexpatterns);
-            // const createip = await createIndexPattern(undefined, "ope*", indexpatterns, "")
-            // console.log(createip)
-            // Get all indices
             const gettedIndices = await getIndicesViaResolve(
                 http,
                 "*",
                 false,
                 dataSource
-            )
+            );
             setIndices(gettedIndices);
+            setBreadcrumbs(getCreateBreadcrumbs());
             setLoading(false);
         })();
     }, [
@@ -273,83 +216,33 @@ export const PointInTimeCreateForm = ({ history }) => {
                 }
             })
             .catch(() => {
-                // toasts.addDanger(
-                //   i18n.translate('pitManagement.pitTable.fetchDataSourceError', {
-                //     defaultMessage: 'Unable to find existing data sources',
-                //   })
-                // );
+                toasts.addDanger(
+                    i18n.translate('pitManagement.pitTable.fetchDataSourceError', {
+                        defaultMessage: 'Unable to find existing data sources',
+                    })
+                );
             });
     };
 
     const createPointInTime = async () => {
 
         const keepAlive = keepAliveTime + keepAliveUnit;
-        //const createip = await createIndexPattern(undefined, "ope*", indexpatterns, "")
-        //getFieldsForWildcard("*", "", indexpatterns);
-        console.log(selectedIndexOptions)
-
-        console.log("keep alive :" + keepAlive);
-        console.log("name : " + pitName);
-        console.log("index pattern : " + selectedIndexPattern);
-
-        if (showIndices) {
-            const indices = selectedIndexOptions.flatMap(a => a.label).join(",");
-            debugger;
-            let indexPattern = indexPatterns.find(x=>x.title == indices);
-            const ds  = {
-                id: dataSource,
-                type: "data-source",
-                name: "DataSource",
-            }
-            if(!indexPattern) {
-                indexPattern = await createIndexPattern(indices, data.indexPatterns, ds)
-            }
-            const indexPatternId = indexPattern.id;
-            
-            const reference: SavedObjectReference = {
-                id: indexPatternId,
-                type: 'index-pattern',
-                name: indexPatternId
-            }
-            const service = getServices(http);
-            const createdPit = await service.createPit(indices, keepAlive, true, dataSource );
-            
-            if(makedashboardschecked) {
-                const pit: PointInTime = {
-                    name: pitName,
-                    keepAlive: keepAlive,
-                    id:  createdPit.pit_id, // Todo create pit and fill the pit id,
-                    indices: indices
+        try {
+            if (makedashboardschecked) {
+                const dupe = await findByTitle(savedObjects.client, pitName);
+                if (dupe) {
+                    throw new Error(`Duplicate Point in time: ${pitName}`);
                 }
-                await createSavedObject(pit, savedObjects.client, reference, dataSource, http);
             }
-            history.push('');
-        } else {
-            const indexPattern = indexPatterns.find(x=>x.id == selectedIndexPattern);
+            await createPit(selectedIndexOptions, selectedIndexPattern, indexPatterns, dataSource, data, 
+                http, keepAlive, makedashboardschecked, pitName, savedObjects, deletepitchecked);
 
-            const pit: PointInTime = {
-                name: pitName,
-                keepAlive: keepAlive,
-                id: 'id1',
-                indices: indexPattern.title // Todo create pit and fill the pit id
-            }
-            const reference: SavedObjectReference = {
-                id: indexPattern.id,
-                type: 'index-pattern',
-                name: indexPattern.title
-            }
-            const service = getServices(http);
-            const createdPit = await service.createPit(pit.indices, pit.keepAlive, true, dataSource );
-            if(makedashboardschecked) {
-                const pit: PointInTime = {
-                    name: pitName,
-                    keepAlive: keepAlive,
-                    id:  createdPit.pit_id, // Todo create pit and fill the pit id,
-                    indices: indexPattern.title 
-                }
-                await createSavedObject(pit, savedObjects.client, reference, dataSource, http);
-            }
             history.push('');
+            toasts.addSuccess("Point in time created successfully");
+        } catch (e) {
+            toasts.addDanger(
+                e.message
+            );
         }
         //setIsFlyoutVisible(false);
 
@@ -372,6 +265,7 @@ export const PointInTimeCreateForm = ({ history }) => {
         if (optionId == "index-pattern-option") {
             setShowIndexPatterns(true)
             setShowIndices(false)
+            setSelectedIndexOptions([])
         } else if (optionId == "index-option") {
             setShowIndices(true)
             setShowIndexPatterns(false)
@@ -423,7 +317,6 @@ export const PointInTimeCreateForm = ({ history }) => {
         // Also lets create index pattern only at the end
         // if selection of indices match index pattern, don't create index pattern
         // otherwise create index pattern
-        console.log("indices : " + showIndices)
         renderDataSource = <EuiFormRow label="Indices" helpText="Use an asterisk (*) to match multiple indices. Spaces and some characters are not allowed.">
             <EuiComboBox
                 placeholder="Select or create options"
