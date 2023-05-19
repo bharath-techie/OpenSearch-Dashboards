@@ -295,9 +295,9 @@ const PITTable = ({ history }: RouteComponentProps) => {
     };
 
     const reference: SavedObjectReference = {
-      id: '5586e600-f57b-11ed-90e3-a75eeb2a18a5',
+      id: 'ff959d40-b880-11e8-a6d9-e546fe2bba5f',
       type: 'index-pattern',
-      name: 'my*',
+      name: 'opensearch_dashboards_sample_data_ecommerce',
     };
     createSavedObject(pit, savedObjects.client, reference);
   };
