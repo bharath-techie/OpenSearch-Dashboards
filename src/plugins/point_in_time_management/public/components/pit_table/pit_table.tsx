@@ -134,7 +134,8 @@ const PITTable = ({ history }: RouteComponentProps) => {
 
   const navigateEdit = (pit) => {
     console.log(pit);
-    history.push(`${pit.id}`);
+    const id = pit.id ? pit.id : "edit";
+    history.push(`${id}`, pit);
   };
 
   const getPits = (dataSourceId?: string) => {

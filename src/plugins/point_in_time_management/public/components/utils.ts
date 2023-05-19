@@ -229,7 +229,7 @@ export async function createPitSavedObject(pointintime, client, reference) {
 
 export async function createPit(selectedIndexOptions, selectedIndexPattern, indexPatterns: PointInTimeFlyoutItem[], 
   dataSource: string, data: DataPublicPluginStart, http: HttpSetup, keepAlive: string, 
-  makedashboardschecked: boolean, pitName: string, savedObjects: SavedObjectsStart, deletepitchecked: boolean, pit:any=null) {
+  makedashboardschecked: boolean, pitName: string, savedObjects: SavedObjectsStart, deletepitchecked: boolean, :any=nulpitl) {
       let indexPatternObj;
   if (selectedIndexOptions.length > 0) {
       const indices = selectedIndexOptions.flatMap(a => a.label).join(",");
@@ -252,7 +252,7 @@ export async function createPit(selectedIndexOptions, selectedIndexPattern, inde
       name: indexPatternObj.title
   };
   const service = getServices(http);
-  const createdPit = pit == null ? await service.createPit(indexPatternObj.title, keepAlive, true, dataSource) : pit;
+  const createdPit = pit ? await service.createPit(indexPatternObj.title, keepAlive, true, dataSource) : pit;
   if (makedashboardschecked) {
       const pit: PointInTime = {
           name: pitName,

@@ -48,8 +48,8 @@ const defaultPitSavedObject: PointInTimeAttributes = {
   delete_on_expiry: false,
 };
 
-export const PITEdit: React.FunctionComponent<RouteComponentProps<{ id: string }>> = (
-  props: RouteComponentProps<{ id: string }>
+export const PITEdit = (
+  props
 ) => {
   const {
     setBreadcrumbs,
@@ -58,6 +58,9 @@ export const PITEdit: React.FunctionComponent<RouteComponentProps<{ id: string }
     http,
   } = useOpenSearchDashboards<PointInTimeManagementContext>().services;
   const PitID: string = props.match.params.id;
+  const pit = props.location && props.location.state;
+  console.log(pit);
+  debugger;
   const [pitSavedObject, setPitSavedObject] = useState<PointInTimeAttributes>(
     defaultPitSavedObject
   );
