@@ -318,3 +318,34 @@ export async function createPit(
     await createSavedObject(pit, savedObjects.client, reference);
   }
 }
+
+export async function createPitSavedObjectWithIndexPatttern(
+  pointintime: PointInTime,
+  client: SavedObjectsClientContract,
+  data: DataPublicPluginStart,
+  indices: string[],
+  dataSourceId: string
+) {
+  let indexPatternObj;
+  const index = indices.join(',');
+  const gettedIndexPatterns = await getIndexPatterns(client);
+  console.log('fetched index patterns', gettedIndexPatterns);
+  const dsIndexPatterns = gettedIndexPatterns.filter((x) => x.datasource == dataSourceId);
+  indexPatternObj = dsIndexPatterns.find((x) => x.title == index);
+  if (!indexPatternObj) {
+    const ds = {
+      id: dataSourceId,
+      type: 'data-source',
+      name: 'DataSource',
+    };
+    indexPatternObj = await createIndexPattern(index, data.indexPatterns, ds);
+  }
+
+  const reference: SavedObjectReference = {
+    id: indexPatternObj.id,
+    type: 'index-pattern',
+    name: indexPatternObj.title,
+  };
+
+  await createSavedObject(pointintime, client, reference);
+}

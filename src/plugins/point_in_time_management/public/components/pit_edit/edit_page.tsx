@@ -7,30 +7,13 @@ import React, { useEffect, useState } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useEffectOnce, useMount } from 'react-use';
 import { i18n } from '@osd/i18n';
-import {
-  EuiBottomBar,
-  EuiButton,
-  EuiButtonEmpty,
-  EuiCheckbox,
-  EuiDescribedFormGroup,
-  EuiFieldNumber,
-  EuiFieldText,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiForm,
-  EuiFormRow,
-  EuiPageContent,
-  EuiPageHeader,
-  EuiPageHeaderSection,
-  EuiSpacer,
-  EuiTitle,
-} from '@elastic/eui';
 import { useOpenSearchDashboards } from '../../../../opensearch_dashboards_react/public';
 import { PointInTimeAttributes, PointInTimeManagementContext } from '../../types';
 import { getEditBreadcrumbs } from '../breadcrumbs';
 import { EditPitForm } from './edit_pit_form';
 import {
   createPit,
+  createPitSavedObjectWithIndexPatttern,
   findById,
   findPointInTimeSavedObject,
   updatePointInTimeById,
@@ -56,6 +39,7 @@ export const PITEdit = (props) => {
     savedObjects,
     notifications: { toasts },
     http,
+    data,
   } = useOpenSearchDashboards<PointInTimeManagementContext>().services;
   const PitID: string = props.match.params.id;
   const pit = props.location && props.location.state;
@@ -131,7 +115,33 @@ export const PITEdit = (props) => {
 
       if (attributes.name !== '') {
         console.log('name updated');
+
         // createsavedobject
+
+        services.getAllPits(pit.dataSourceId).then((fetchedPits) => {
+          const backendPit = fetchedPits.resp.pits.filter((x) => x.pit_id === attributes.pit_id)[0];
+          createPitSavedObjectWithIndexPatttern(
+            {
+              creation_time: backendPit.creation_time,
+              dataSource: pit.dataSourceId ? pit.dataSourceId : '',
+              delete_on_expiry: false,
+              keepAlive: backendPit.keep_alive,
+              name: attributes.name,
+              pit_id: backendPit.pit_id,
+              id: '',
+            },
+            savedObjects.client,
+            data,
+            backendPit.indices,
+            pit.dataSourceId
+          ).catch(() => {
+            toasts.addDanger(
+              i18n.translate('pitManagement.edit.createSavedObjectError', {
+                defaultMessage: 'Error while creating saved object.',
+              })
+            );
+          });
+        });
       }
 
       // TODO:: Need to call the create PIT ID here.
