@@ -127,10 +127,11 @@ export const PITEdit = (
       console.log(attributes);
       console.log("This is not saved object");
       // TODO:: Need to call the create PIT ID here.
-      await createPit(
-        ['opensearch_dashboards_sample_data_ecommerce'],
-        'opensearch_dashboards_sample_data_ecommerce', indexPatterns, dataSource, data,
-        http, keepAlive, makedashboardschecked, pitName, savedObjects, deletepitchecked)
+      // TODO:: Add indices and data source in the PIT object and call createPit
+      // await createPit(
+      //   ['opensearch_dashboards_sample_data_ecommerce'],
+      //   'opensearch_dashboards_sample_data_ecommerce', indexPatterns, dataSource, data,
+      //   http, keepAlive, makedashboardschecked, pitName, savedObjects, deletepitchecked)
       props.history.push('/');
     }
 
