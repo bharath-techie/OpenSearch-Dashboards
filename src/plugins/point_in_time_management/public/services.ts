@@ -38,7 +38,7 @@ export function getServices(http: CoreStart['http']): Services {
         console.log(pit_id, keepAlive, dataSourceId);
         const response = await http.post('/api/pit/addTime', {
           body: JSON.stringify({
-            dataSourceId: dataSourceId ? dataSourceId : 'default',
+            dataSourceId: dataSourceId ? dataSourceId : '',
             pit_id,
             keepAlive,
           }),

@@ -19,6 +19,7 @@ import {
   EuiPageHeader,
   EuiPageHeaderSection,
   EuiSpacer,
+  EuiSwitch,
   EuiTitle,
 } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
@@ -45,6 +46,8 @@ export interface EditPitState {
   AddTimeMin: any;
   addTime: any;
   isSavedObject: any;
+  makedashboardschecked: boolean;
+  creation_time?: number;
 }
 
 export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
@@ -63,6 +66,8 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
       AddTimeMin: 0,
       addTime: 0,
       isSavedObject: true,
+      makedashboardschecked: false,
+      creation_time: 0,
     };
   }
 
@@ -80,6 +85,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
   setFormValuesForEditMode() {
     if (this.props.existingPointInTime) {
       const {
+        creation_time,
         keepAlive,
         name,
         pit_id,
@@ -92,8 +98,9 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
         name,
         pit_id,
         id,
-        addtime,
+        addTime: addtime,
         isSavedObject,
+        creation_time,
       });
     }
   }
@@ -117,7 +124,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
       const formValues: PointInTimeAttributes = {
         name: this.state.name,
         keepAlive: this.state.keepAlive,
-        creation_time: this.state.keepAlive,
+        creation_time: this.state.creation_time,
         id: this.state.id,
         pit_id: this.state.pit_id,
         addtime: this.state.addTime,
@@ -301,14 +308,32 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
           }
         >
           <EuiFormRow>
-            <>
-              <EuiCheckbox
-                id="pit-id"
-                label="Make available in Dashboards"
-                onChange={(e) => this.onChange(e)}
-              />
-            </>
+            <EuiSwitch
+              label="Make available in dashboards"
+              checked={this.state.makedashboardschecked}
+              onChange={(e) =>
+                this.setState({ ...this.state, makedashboardschecked: e.target.checked })
+              }
+            />
           </EuiFormRow>
+
+          {this.state.makedashboardschecked && (
+            <EuiFlexGroup style={{ maxWidth: 800 }}>
+              <EuiFlexItem>
+                <EuiFormRow hasEmptyLabelSpace>
+                  <EuiFieldText disabled value="PIT-" />
+                </EuiFormRow>
+              </EuiFlexItem>
+              <EuiFlexItem>
+                <EuiFormRow
+                  label="Point in time name"
+                  helpText="Specify a unique and descriptive name that is easy to recognize."
+                >
+                  <EuiFieldText placeholder="Descriptive name" onChange={this.onChangePitName} />
+                </EuiFormRow>
+              </EuiFlexItem>
+            </EuiFlexGroup>
+          )}
         </EuiDescribedFormGroup>
       </EuiForm>
     );

@@ -117,12 +117,23 @@ export const PITEdit = (props) => {
       console.log('These are the attributes', attributes);
       const new_keep_alive_proposal = attributes.addtime.toString() + 'm';
       console.log(attributes.pit_id, new_keep_alive_proposal);
-      await services.addPitTime(attributes.pit_id, new_keep_alive_proposal);
+      await services.addPitTime(attributes.pit_id, new_keep_alive_proposal, pit.dataSourceId);
       await updatePointInTimeById(savedObjects.client, attributes.id, attributes);
       props.history.push('/');
     } else {
-      console.log(attributes);
-      console.log('This is not saved object');
+      console.log('This is not saved object', attributes);
+      if (attributes.addtime > 0) {
+        console.log('time updated');
+        // update pit time
+        const new_keep_alive_proposal = attributes.addtime.toString() + 'm';
+        await services.addPitTime(attributes.pit_id, new_keep_alive_proposal, pit.dataSourceId);
+      }
+
+      if (attributes.name !== '') {
+        console.log('name updated');
+        // createsavedobject
+      }
+
       // TODO:: Need to call the create PIT ID here.
       // TODO:: Add indices and data source in the PIT object and call createPit
       // await createPit(

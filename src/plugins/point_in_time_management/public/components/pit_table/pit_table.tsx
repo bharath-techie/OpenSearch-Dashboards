@@ -135,6 +135,16 @@ const PITTable = ({ history }: RouteComponentProps) => {
   const navigateEdit = (pit) => {
     console.log('editing', pit);
     const id = pit.id ? pit.id : 'edit';
+    let dataSourceId;
+    if (pit.dataSource === '') {
+      dataSourceId = undefined;
+    } else {
+      const dataSource = dataSources.filter((x) => x.title === pit.dataSource);
+      dataSourceId = dataSource[0].id;
+    }
+
+    pit.dataSourceId = dataSourceId;
+
     history.push(`${id}`, pit);
   };
 
