@@ -44,6 +44,7 @@ export interface PointInTime {
   creation_time: number;
   id?: string;
   delete_on_expiry: boolean;
+  dataSource: string;
 }
 
 export async function getIndexPatterns(savedObjectsClient: SavedObjectsClientContract) {
@@ -86,10 +87,20 @@ export async function getSavedPits(client: SavedObjectsClientContract) {
   const savedObjects = await client.find({
     type: 'point-in-time',
     perPage: 1000,
-    fields: ['id', 'creation_time', 'keepAlive', 'name', 'pit_id', 'delete_on_expiry'],
+    fields: ['id', 'creation_time', 'keepAlive', 'name', 'pit_id', 'delete_on_expiry', 'dataSource'],
   });
 
   return savedObjects.savedObjects;
+}
+
+export async function getPitSavedPitsByDataSource(client: SavedObjectsClientContract, dataSource: string) {
+  const savedObjects = await client.find({
+    type: 'point-in-time',
+    perPage: 1000,
+    fields: ['id', 'creation_time', 'keepAlive', 'name', 'pit_id', 'delete_on_expiry', 'dataSource'],
+  });
+
+  return savedObjects.savedObjects.filter(x => x.attributes.dataSource == dataSource);
 }
 
 export async function findById(client: SavedObjectsClientContract, id: string) {
@@ -261,6 +272,7 @@ export async function createPit(selectedIndexOptions, selectedIndexPattern, inde
           creation_time: createdPit.creation_time,
           delete_on_expiry: deletepitchecked,
           id: '',
+          dataSource: dataSource,
       };
       await createSavedObject(pit, savedObjects.client, reference);
   }

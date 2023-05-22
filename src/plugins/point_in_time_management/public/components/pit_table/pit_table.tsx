@@ -40,6 +40,7 @@ import {
   getSavedPits,
   deletePointInTimeById,
   updatePointInTimeSavedObject,
+  getPitSavedPitsByDataSource
 } from '../utils';
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
@@ -133,7 +134,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
   };
 
   const navigateEdit = (pit) => {
-    console.log(pit);
+    console.log('editing', pit);
     const id = pit.id ? pit.id : "edit";
     history.push(`${id}`, pit);
   };
@@ -172,7 +173,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
     services
       .getAllPits(dataSourceId)
       .then((fetchedPits) => {
-        getSavedPits(savedObjects.client)
+        getPitSavedPitsByDataSource(savedObjects.client, dataSourceId ? dataSourceId : '')
           .then((fetchedDashboardPits) => {
             // if (fetchedDataSources?.length) {
             //   setDashboardPits(fetchedDataSources);
@@ -329,7 +330,13 @@ const PITTable = ({ history }: RouteComponentProps) => {
     }
     services.deletePits([pit.pit_id], dataSourceId).then((deletedPits) => {
       console.log(deletedPits);
-      getPits(dataSource);
+      if (pit.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, pit.id).then(() => {
+          getPits(dataSource);
+        });
+      } else {
+        getPits(dataSource);
+      }
     });
   };
 
@@ -533,6 +540,12 @@ const PITTable = ({ history }: RouteComponentProps) => {
       .then((deletedPits) => {
         console.log(deletedPits);
         getPits(dataSource);
+      });
+
+      selectedPits.forEach((x) => {
+        if (x.isSavedObject) {
+          deletePointInTimeById(savedObjects.client, x.id);
+        }
       });
   };
 

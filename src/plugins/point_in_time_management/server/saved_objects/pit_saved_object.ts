@@ -29,6 +29,7 @@ export const pointInTimeSavedObject: SavedObjectsType = {
   mappings: {
     dynamic: false,
     properties: {
+      dataSource: { type: 'text' },
       title: { type: 'text' },
       creation_time: { type: 'double' },
       keepAlive: { type: 'integer' },
