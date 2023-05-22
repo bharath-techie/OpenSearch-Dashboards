@@ -72,6 +72,11 @@ export const opensearchSearchStrategyProvider = (
         ...request.params,
       });
 
+      console.log('This is the params', params);
+
+      if (params.body.pit) {
+        delete params.ignore_unavailable;
+      }
       try {
         const client = await decideClient(context, request);
         const promise = shimAbortSignal(client.search(params), options?.abortSignal);

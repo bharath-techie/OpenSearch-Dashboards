@@ -20,7 +20,10 @@ export async function mountManagementSection(
   getStartServices: StartServicesAccessor<PointInTimeManagementStartDependencies>,
   params: ManagementAppMountParams
 ) {
-  const [{ chrome, application, savedObjects, notifications, http }, {data}] = await getStartServices();
+  const [
+    { chrome, application, savedObjects, notifications, http },
+    { data },
+  ] = await getStartServices();
   const deps: PointInTimeManagementContext = {
     chrome,
     application,
@@ -35,8 +38,8 @@ export async function mountManagementSection(
       <I18nProvider>
         <Router history={params.history}>
           <Switch>
-          <Route path={['/create']}>
-              <CreatePitWithRouter/>
+            <Route path={['/create']}>
+              <CreatePitWithRouter />
             </Route>
             <Route path={['/:id']}>
               <PITEditWithRouter />

@@ -3,14 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-
-
-import { HttpSetup, HttpStart, SavedObjectReference, SavedObjectsClientContract, SavedObjectsStart } from 'src/core/public';
+import {
+  HttpSetup,
+  HttpStart,
+  SavedObjectReference,
+  SavedObjectsClientContract,
+  SavedObjectsStart,
+} from 'src/core/public';
 import { DataSourceAttributes } from 'src/plugins/data_source/common/data_sources';
-import { PointInTimeAttributes } from '../types';
 import { ResolveIndexResponse } from 'src/plugins/index_pattern_management/public/components/create_index_pattern_wizard/types';
-import { getServices } from '../services';
 import { DataPublicPluginStart } from 'src/plugins/data/public';
+import { PointInTimeAttributes } from '../types';
+import { getServices } from '../services';
 import { PointInTimeFlyoutItem } from './create_pit/create_pit';
 
 export async function getDataSources(savedObjectsClient: SavedObjectsClientContract) {
@@ -44,6 +48,7 @@ export interface PointInTime {
   creation_time: number;
   id?: string;
   delete_on_expiry: boolean;
+  dataSource: string;
 }
 
 export async function getIndexPatterns(savedObjectsClient: SavedObjectsClientContract) {
@@ -86,10 +91,39 @@ export async function getSavedPits(client: SavedObjectsClientContract) {
   const savedObjects = await client.find({
     type: 'point-in-time',
     perPage: 1000,
-    fields: ['id', 'creation_time', 'keepAlive', 'name', 'pit_id', 'delete_on_expiry'],
+    fields: [
+      'id',
+      'creation_time',
+      'keepAlive',
+      'name',
+      'pit_id',
+      'delete_on_expiry',
+      'dataSource',
+    ],
   });
 
   return savedObjects.savedObjects;
+}
+
+export async function getPitSavedPitsByDataSource(
+  client: SavedObjectsClientContract,
+  dataSource: string
+) {
+  const savedObjects = await client.find({
+    type: 'point-in-time',
+    perPage: 1000,
+    fields: [
+      'id',
+      'creation_time',
+      'keepAlive',
+      'name',
+      'pit_id',
+      'delete_on_expiry',
+      'dataSource',
+    ],
+  });
+
+  return savedObjects.savedObjects.filter((x) => x.attributes.dataSource == dataSource);
 }
 
 export async function findById(client: SavedObjectsClientContract, id: string) {
@@ -132,7 +166,7 @@ export async function updatePointInTimeKeepAlive(
   savedObjectsClient: SavedObjectsClientContract,
   id: string,
   addTime: number
-) { }
+) {}
 
 export async function createSavedObject(
   pointintime: PointInTime,
@@ -160,7 +194,7 @@ export async function createSavedObject(
 }
 export async function getIndicesViaResolve(
   http: HttpStart,
-  //getIndexTags: IndexPatternCreationConfig['getIndexTags'],
+  // getIndexTags: IndexPatternCreationConfig['getIndexTags'],
   pattern: string,
   showAllIndices: boolean,
   dataSourceId?: string
@@ -184,7 +218,6 @@ export async function getIndicesViaResolve(
         const source: any[] | PromiseLike<any[]> = [];
 
         (response.indices || []).forEach((index) => {
-
           source.push({
             name: index.name,
             item: index,
@@ -193,27 +226,34 @@ export async function getIndicesViaResolve(
         return source;
       }
     });
-};
+}
 
-export async function getFieldsForWildcard(indexPattern: string, capabilities: any, indexPatternsService: any) {
-
+export async function getFieldsForWildcard(
+  indexPattern: string,
+  capabilities: any,
+  indexPatternsService: any
+) {
   return await indexPatternsService!.getFieldsForWildcard({
     pattern: indexPattern,
     fieldCapsOptions: { allowNoIndices: true },
   });
 }
 
-export async function createIndexPattern(indexPatternTitle: string, indexPatternsService: any, dataSourceRef: any) {
+export async function createIndexPattern(
+  indexPatternTitle: string,
+  indexPatternsService: any,
+  dataSourceRef: any
+) {
   try {
     return await indexPatternsService.createAndSave({
       title: indexPatternTitle,
-      id: "",
+      id: '',
       dataSourceRef,
     });
   } catch (err) {
     throw err;
   }
-};
+}
 
 export async function createPitSavedObject(pointintime, client, reference) {
   const body = pointintime;
@@ -221,49 +261,91 @@ export async function createPitSavedObject(pointintime, client, reference) {
   body.title = pointintime.name;
   body.name = pointintime.name;
   const references = [{ ...reference }];
-  const savedObjectType = "point-in-time";
+  const savedObjectType = 'point-in-time';
   return await client.create(savedObjectType, body, {
     references,
   });
 }
 
-export async function createPit(selectedIndexOptions, selectedIndexPattern, indexPatterns: PointInTimeFlyoutItem[], 
-  dataSource: string, data: DataPublicPluginStart, http: HttpSetup, keepAlive: string, 
-  makedashboardschecked: boolean, pitName: string, savedObjects: SavedObjectsStart, deletepitchecked: boolean, pit:any=null) {
-      let indexPatternObj;
+export async function createPit(
+  selectedIndexOptions,
+  selectedIndexPattern,
+  indexPatterns: PointInTimeFlyoutItem[],
+  dataSource: string,
+  data: DataPublicPluginStart,
+  http: HttpSetup,
+  keepAlive: string,
+  makedashboardschecked: boolean,
+  pitName: string,
+  savedObjects: SavedObjectsStart,
+  deletepitchecked: boolean,
+  pit: any = null
+) {
+  let indexPatternObj;
   if (selectedIndexOptions.length > 0) {
-      const indices = selectedIndexOptions.flatMap(a => a.label).join(",");
-      indexPatternObj = indexPatterns.find(x => x.title == indices);
-      const ds = {
-          id: dataSource,
-          type: "data-source",
-          name: "DataSource",
-      };
-      if (!indexPatternObj) {
-          indexPatternObj = await createIndexPattern(indices, data.indexPatterns, ds);
-      }
+    const indices = selectedIndexOptions.flatMap((a) => a.label).join(',');
+    indexPatternObj = indexPatterns.find((x) => x.title == indices);
+    const ds = {
+      id: dataSource,
+      type: 'data-source',
+      name: 'DataSource',
+    };
+    if (!indexPatternObj) {
+      indexPatternObj = await createIndexPattern(indices, data.indexPatterns, ds);
+    }
   } else {
-      indexPatternObj = indexPatterns.find(x => x.id == selectedIndexPattern);
+    indexPatternObj = indexPatterns.find((x) => x.id == selectedIndexPattern);
   }
 
   const reference: SavedObjectReference = {
-      id: indexPatternObj.id,
-      type: 'index-pattern',
-      name: indexPatternObj.title
+    id: indexPatternObj.id,
+    type: 'index-pattern',
+    name: indexPatternObj.title,
   };
   const service = getServices(http);
-  const createdPit = pit == null ? await service.createPit(indexPatternObj.title, keepAlive, true, dataSource) : pit;
+  const createdPit =
+    pit == null ? await service.createPit(indexPatternObj.title, keepAlive, true, dataSource) : pit;
   if (makedashboardschecked) {
-      const pit: PointInTime = {
-          name: pitName,
-          keepAlive: createdPit.keep_alive,
-          pit_id: createdPit.pit_id,
-          creation_time: createdPit.creation_time,
-          delete_on_expiry: deletepitchecked,
-          id: '',
-      };
-      await createSavedObject(pit, savedObjects.client, reference);
+    const pit: PointInTime = {
+      name: pitName,
+      keepAlive: createdPit.keep_alive,
+      pit_id: createdPit.pit_id,
+      creation_time: createdPit.creation_time,
+      delete_on_expiry: deletepitchecked,
+      id: '',
+      dataSource,
+    };
+    await createSavedObject(pit, savedObjects.client, reference);
   }
 }
 
+export async function createPitSavedObjectWithIndexPatttern(
+  pointintime: PointInTime,
+  client: SavedObjectsClientContract,
+  data: DataPublicPluginStart,
+  indices: string[],
+  dataSourceId: string
+) {
+  let indexPatternObj;
+  const index = indices.join(',');
+  const gettedIndexPatterns = await getIndexPatterns(client);
+  console.log('fetched index patterns', gettedIndexPatterns);
+  const dsIndexPatterns = gettedIndexPatterns.filter((x) => x.datasource == dataSourceId);
+  indexPatternObj = dsIndexPatterns.find((x) => x.title == index);
+  if (!indexPatternObj) {
+    const ds = {
+      id: dataSourceId,
+      type: 'data-source',
+      name: 'DataSource',
+    };
+    indexPatternObj = await createIndexPattern(index, data.indexPatterns, ds);
+  }
 
+  const reference: SavedObjectReference = {
+    id: indexPatternObj.id,
+    type: 'index-pattern',
+    name: indexPatternObj.title,
+  };
+
+  await createSavedObject(pointintime, client, reference);
+}

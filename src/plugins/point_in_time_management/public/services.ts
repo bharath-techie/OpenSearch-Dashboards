@@ -8,7 +8,12 @@ import { CoreStart, HttpFetchError } from 'opensearch-dashboards/public';
 export interface Services {
   getAllPits: (dataSourceId?: string) => Promise<undefined | HttpFetchError>;
   deletePits: (pits: string[], dataSourceId?: string) => any;
-  createPit: (index: string, keepAlive: string, allowPartialCreation:  boolean, dataSourceId?: string) => any;
+  createPit: (
+    index: string,
+    keepAlive: string,
+    allowPartialCreation: boolean,
+    dataSourceId?: string
+  ) => any;
   addPitTime: (pit_id: string, keepAlive: string, dataSourceId?: string) => any;
 }
 
@@ -33,7 +38,7 @@ export function getServices(http: CoreStart['http']): Services {
         console.log(pit_id, keepAlive, dataSourceId);
         const response = await http.post('/api/pit/addTime', {
           body: JSON.stringify({
-            dataSourceId: dataSourceId ? dataSourceId : 'default',
+            dataSourceId: dataSourceId ? dataSourceId : '',
             pit_id,
             keepAlive,
           }),
@@ -59,20 +64,25 @@ export function getServices(http: CoreStart['http']): Services {
       }
     },
 
-    createPit: async (index: string, keepAlive: string, allowPartialCreation: boolean, dataSourceId?: string) => {
+    createPit: async (
+      index: string,
+      keepAlive: string,
+      allowPartialCreation: boolean,
+      dataSourceId?: string
+    ) => {
       try {
-        console.log("create pit : " + dataSourceId)
-        const response = await http.post('/api/pit/create/'+index, {
+        console.log('create pit : ' + dataSourceId);
+        const response = await http.post('/api/pit/create/' + index, {
           body: JSON.stringify({
             dataSourceId: dataSourceId ? dataSourceId : '',
           }),
           query: {
-            keepAlive: keepAlive,
-            allowPartialFailures : allowPartialCreation
-          }
+            keepAlive,
+            allowPartialFailures: allowPartialCreation,
+          },
         });
-        console.log("create pit response")
-        console.log(response)
+        console.log('create pit response');
+        console.log(response);
         return response;
       } catch (e) {
         return e;

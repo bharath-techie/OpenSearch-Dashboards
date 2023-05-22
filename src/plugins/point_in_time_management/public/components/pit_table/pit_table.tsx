@@ -40,6 +40,7 @@ import {
   getSavedPits,
   deletePointInTimeById,
   updatePointInTimeSavedObject,
+  getPitSavedPitsByDataSource,
 } from '../utils';
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
@@ -85,7 +86,6 @@ const PITTable = ({ history }: RouteComponentProps) => {
   });
 
   const createButton = <CreateButton history={history} dataTestSubj="createPitButton" />;
-
 
   const services: Services = getServices(http);
 
@@ -133,8 +133,18 @@ const PITTable = ({ history }: RouteComponentProps) => {
   };
 
   const navigateEdit = (pit) => {
-    console.log(pit);
-    const id = pit.id ? pit.id : "edit";
+    console.log('editing', pit);
+    const id = pit.id ? pit.id : 'edit';
+    let dataSourceId;
+    if (pit.dataSource === '') {
+      dataSourceId = undefined;
+    } else {
+      const dataSource = dataSources.filter((x) => x.title === pit.dataSource);
+      dataSourceId = dataSource[0].id;
+    }
+
+    pit.dataSourceId = dataSourceId;
+
     history.push(`${id}`, pit);
   };
 
@@ -172,7 +182,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
     services
       .getAllPits(dataSourceId)
       .then((fetchedPits) => {
-        getSavedPits(savedObjects.client)
+        getPitSavedPitsByDataSource(savedObjects.client, dataSourceId ? dataSourceId : '')
           .then((fetchedDashboardPits) => {
             // if (fetchedDataSources?.length) {
             //   setDashboardPits(fetchedDataSources);
@@ -295,9 +305,9 @@ const PITTable = ({ history }: RouteComponentProps) => {
     };
 
     const reference: SavedObjectReference = {
-      id: '5586e600-f57b-11ed-90e3-a75eeb2a18a5',
+      id: 'ff959d40-b880-11e8-a6d9-e546fe2bba5f',
       type: 'index-pattern',
-      name: 'my*',
+      name: 'opensearch_dashboards_sample_data_ecommerce',
     };
     createSavedObject(pit, savedObjects.client, reference);
   };
@@ -329,7 +339,13 @@ const PITTable = ({ history }: RouteComponentProps) => {
     }
     services.deletePits([pit.pit_id], dataSourceId).then((deletedPits) => {
       console.log(deletedPits);
-      getPits(dataSource);
+      if (pit.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, pit.id).then(() => {
+          getPits(dataSource);
+        });
+      } else {
+        getPits(dataSource);
+      }
     });
   };
 
@@ -534,6 +550,12 @@ const PITTable = ({ history }: RouteComponentProps) => {
         console.log(deletedPits);
         getPits(dataSource);
       });
+
+    selectedPits.forEach((x) => {
+      if (x.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, x.id);
+      }
+    });
   };
 
   const renderToolsRight = () => {
@@ -663,9 +685,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
                 />
               </EuiButton>
             </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              {createButton}
-            </EuiFlexItem>
+            <EuiFlexItem grow={false}>{createButton}</EuiFlexItem>
           </EuiFlexGroup>
         </EuiPageContentHeader>
         <EuiText size="s">

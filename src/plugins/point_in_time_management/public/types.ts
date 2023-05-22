@@ -10,10 +10,10 @@ import {
   SavedObjectAttributes,
 } from 'opensearch-dashboards/public';
 import { NotificationsStart, SavedObjectsStart } from 'src/core/public';
+import { DataPublicPluginStart } from 'src/plugins/data/public';
 import { NavigationPublicPluginStart } from '../../navigation/public';
 import { ManagementAppMountParams } from '../../management/public';
 import { ManagementSetup } from '../../management/public';
-import { DataPublicPluginStart } from 'src/plugins/data/public';
 
 export interface PointInTimeAttributes extends SavedObjectAttributes {
   creation_time?: number;
@@ -23,6 +23,7 @@ export interface PointInTimeAttributes extends SavedObjectAttributes {
   id?: string;
   addtime: number;
   delete_on_expiry: boolean;
+  isSavedObject?: boolean;
 }
 
 export interface ToastMessageItem {
@@ -37,7 +38,7 @@ export interface PointInTimeManagementContext {
   notifications: NotificationsStart;
   savedObjects: SavedObjectsStart;
   http: HttpSetup;
-  data: DataPublicPluginStart,
+  data: DataPublicPluginStart;
   setBreadcrumbs: ManagementAppMountParams['setBreadcrumbs'];
 }
 
