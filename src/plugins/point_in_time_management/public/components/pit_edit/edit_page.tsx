@@ -50,9 +50,7 @@ const defaultPitSavedObject: PointInTimeAttributes = {
   isSavedObject: true,
 };
 
-export const PITEdit = (
-  props
-) => {
+export const PITEdit = (props) => {
   const {
     setBreadcrumbs,
     savedObjects,
@@ -80,7 +78,7 @@ export const PITEdit = (
   });
 
   const fetchPitSavedObject = async () => {
-    if(pit.isSavedObject) {
+    if (pit.isSavedObject) {
       const tempPitSavedObject = await findById(savedObjects.client, PitID);
       setNewProp(true);
       const pointInTimeAttributes: PointInTimeAttributes = {
@@ -107,16 +105,15 @@ export const PITEdit = (
         delete_on_expiry: false,
         isSavedObject: false,
       };
-      console.log("For a local PIT these are the variables");
+      console.log('For a local PIT these are the variables');
       console.log(pointInTimeAttributes);
       setPitSavedObject(pointInTimeAttributes);
       setIsLoading(false);
     }
-
   };
 
   const handleSubmit = async (attributes: PointInTimeAttributes) => {
-    if(attributes.isSavedObject){
+    if (attributes.isSavedObject) {
       console.log('These are the attributes', attributes);
       const new_keep_alive_proposal = attributes.addtime.toString() + 'm';
       console.log(attributes.pit_id, new_keep_alive_proposal);
@@ -125,7 +122,7 @@ export const PITEdit = (
       props.history.push('/');
     } else {
       console.log(attributes);
-      console.log("This is not saved object");
+      console.log('This is not saved object');
       // TODO:: Need to call the create PIT ID here.
       // TODO:: Add indices and data source in the PIT object and call createPit
       // await createPit(
@@ -134,7 +131,6 @@ export const PITEdit = (
       //   http, keepAlive, makedashboardschecked, pitName, savedObjects, deletepitchecked)
       props.history.push('/');
     }
-
   };
 
   const handleDisplayToastMessage = ({ id, defaultMessage, success }: ToastMessageItem) => {

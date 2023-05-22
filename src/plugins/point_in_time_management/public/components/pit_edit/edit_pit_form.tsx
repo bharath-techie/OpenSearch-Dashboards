@@ -69,7 +69,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
   componentDidMount() {
     this.setFormValuesForEditMode();
     console.log('These are the props in mount');
-    console.log('here',this.props);
+    console.log('here', this.props);
   }
 
   resetFormValues = () => {
@@ -79,7 +79,14 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
 
   setFormValuesForEditMode() {
     if (this.props.existingPointInTime) {
-      const { keepAlive, name, pit_id, id, addtime, isSavedObject } = this.props.existingPointInTime;
+      const {
+        keepAlive,
+        name,
+        pit_id,
+        id,
+        addtime,
+        isSavedObject,
+      } = this.props.existingPointInTime;
       this.setState({
         keepAlive,
         name,
@@ -106,7 +113,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
 
   onClickUpdatePit = async () => {
     if (this.isFormValid()) {
-      console.log(this.state, "State");
+      console.log(this.state, 'State');
       const formValues: PointInTimeAttributes = {
         name: this.state.name,
         keepAlive: this.state.keepAlive,
@@ -369,7 +376,9 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
             </EuiPageHeaderSection>
           </EuiPageHeader>
           <EuiSpacer />
-          {this.state.isSavedObject ? this.configurationForm(this.state.isSavedObject) : this.configurationForm(this.state.isSavedObject)}
+          {this.state.isSavedObject
+            ? this.configurationForm(this.state.isSavedObject)
+            : this.configurationForm(this.state.isSavedObject)}
         </EuiPageContent>
         {this.state.showUpdateOptions ? this.renderBottomBar() : null}
       </>

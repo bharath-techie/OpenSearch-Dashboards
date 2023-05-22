@@ -40,7 +40,7 @@ import {
   getSavedPits,
   deletePointInTimeById,
   updatePointInTimeSavedObject,
-  getPitSavedPitsByDataSource
+  getPitSavedPitsByDataSource,
 } from '../utils';
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
@@ -86,7 +86,6 @@ const PITTable = ({ history }: RouteComponentProps) => {
   });
 
   const createButton = <CreateButton history={history} dataTestSubj="createPitButton" />;
-
 
   const services: Services = getServices(http);
 
@@ -135,7 +134,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
 
   const navigateEdit = (pit) => {
     console.log('editing', pit);
-    const id = pit.id ? pit.id : "edit";
+    const id = pit.id ? pit.id : 'edit';
     history.push(`${id}`, pit);
   };
 
@@ -542,11 +541,11 @@ const PITTable = ({ history }: RouteComponentProps) => {
         getPits(dataSource);
       });
 
-      selectedPits.forEach((x) => {
-        if (x.isSavedObject) {
-          deletePointInTimeById(savedObjects.client, x.id);
-        }
-      });
+    selectedPits.forEach((x) => {
+      if (x.isSavedObject) {
+        deletePointInTimeById(savedObjects.client, x.id);
+      }
+    });
   };
 
   const renderToolsRight = () => {
@@ -676,9 +675,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
                 />
               </EuiButton>
             </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              {createButton}
-            </EuiFlexItem>
+            <EuiFlexItem grow={false}>{createButton}</EuiFlexItem>
           </EuiFlexGroup>
         </EuiPageContentHeader>
         <EuiText size="s">

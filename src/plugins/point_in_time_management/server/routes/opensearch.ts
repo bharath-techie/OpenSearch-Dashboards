@@ -120,12 +120,10 @@ export function registerPitRoutes(router: IRouter) {
         params: schema.object({
           index: schema.string(),
         }),
-        query: schema.object(
-          {
-            allowPartialFailures: schema.boolean({ defaultValue: true }),
-            keepAlive: schema.string()
-          },
-        ),
+        query: schema.object({
+          allowPartialFailures: schema.boolean({ defaultValue: true }),
+          keepAlive: schema.string(),
+        }),
         body: schema.object({
           dataSourceId: schema.string(),
         }),
@@ -135,17 +133,18 @@ export function registerPitRoutes(router: IRouter) {
       console.log('This is the request for create point in time path');
       console.log(request);
       const { index } = request.params;
-      const {keepAlive, allowPartialFailures} = request.query
+      const { keepAlive, allowPartialFailures } = request.query;
       console.log(index);
       console.log(context);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       debugger;
       const client: OpenSearchClient = await getClient(request, context);
-      
-      const response_local = await client.createPit({
+
+      const response_local = await client.createPit(
+        {
           index,
           keep_alive: keepAlive,
-          allow_partial_pit_creation: allowPartialFailures
+          allow_partial_pit_creation: allowPartialFailures,
         },
         {}
       );
