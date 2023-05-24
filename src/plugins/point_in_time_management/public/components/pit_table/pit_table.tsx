@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { History } from 'history';
 import { useEffectOnce, useMount } from 'react-use';
 import {
   EuiButton,
@@ -25,6 +26,12 @@ import {
   EuiConfirmModal,
   EuiFormRow,
   EuiFieldText,
+  EuiFieldNumber,
+  EuiModal,
+  EuiModalFooter,
+  EuiModalHeader,
+  EuiModalHeaderTitle,
+  EuiModalBody,
 } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
@@ -45,7 +52,6 @@ import {
 import { EmptyState, NoDataSourceState } from './empty_state';
 // import { PageHeader } from './page_header';
 import { getServices, Services } from '../../services';
-import { PointInTimeCreateForm } from '../create_pit';
 import { CreateButton } from '../create_button';
 // import { dataSource } from 'src/plugins/data_source/server/saved_objects';
 
@@ -73,13 +79,16 @@ export interface PitItem {
   expiry: number;
 }
 
-const PITTable = ({ history }: RouteComponentProps) => {
+const PITTable = (props: RouteComponentProps) => {
   const {
     setBreadcrumbs,
     savedObjects,
     notifications: { toasts },
     http,
   } = useOpenSearchDashboards<PointInTimeManagementContext>().services;
+
+  const history: History = props.history;
+  const dataSourceProp = props.location && props.location.state;
 
   useMount(() => {
     setBreadcrumbs(getListBreadcrumbs());
@@ -96,13 +105,15 @@ const PITTable = ({ history }: RouteComponentProps) => {
   const [loading, setLoading] = useState(false);
   const [pits, setPits] = useState<PitItem[]>([]);
   const [pitsToDelete, setPitsToDelete] = useState<PitItem[]>([]);
+  const [pitToAddTime, setPitToAddTime] = useState<PitItem[]>([]);
   const [selectedPits, setSelectedPits] = useState<PitItem[]>([]);
   // const [dashboardPits, setDashboardPits] = useState<DashboardPitItem[]>([]);
-  const [message, setMessage] = useState(<EmptyState />);
+  const [message, setMessage] = useState(<EmptyState history={history} />);
 
   const [dataSources, setDataSources] = useState<DataSourceItem[]>([defaultDataSource]);
   const [dataSource, setDataSource] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAddTimeModalVisible, setIsAddTimeModalVisible] = useState(false);
 
   useEffectOnce(() => {
     fetchDataSources();
@@ -121,6 +132,11 @@ const PITTable = ({ history }: RouteComponentProps) => {
               .concat([defaultDataSource])
               .sort((a, b) => a.sort.localeCompare(b.sort))
           );
+          console.log('dataSourceprop', dataSourceProp);
+          const ds = dataSourceProp
+            ? fetchedDataSources.filter((x) => x.id === dataSourceProp)[0].title
+            : '';
+          setDataSource(ds);
         }
       })
       .catch(() => {
@@ -413,9 +429,120 @@ const PITTable = ({ history }: RouteComponentProps) => {
     return <div>{modal}</div>;
   };
 
+  const AddTimeModal = ({}) => {
+    const closeModal = () => {
+      setIsAddTimeModalVisible(false);
+    };
+
+    const [addTimeHr, setAddTimeHr] = useState(0);
+    const [addTimeMin, setAddTimeMin] = useState(0);
+    const [addTime, setAddTime] = useState(0);
+
+    const onChangeTimeHr = (e) => {
+      setAddTimeHr(parseInt(e.target.value));
+      setAddTime(60 * parseInt(e.target.value) + addTimeMin);
+    };
+
+    const onChangeTimeMin = (e) => {
+      setAddTimeMin(parseInt(e.target.value));
+      setAddTime(60 * addTimeHr + parseInt(e.target.value));
+    };
+
+    const addTimeToPit = (pit) => {
+      console.log(addTime);
+      console.log('add time pit', pit);
+      const new_keep_alive_proposal = addTime.toString() + 'm';
+      const ds =
+        pit.dataSource == ''
+          ? undefined
+          : dataSources.filter((x) => x.title === pit.dataSource)[0].id;
+      services
+        .addPitTime(pit.pit_id, new_keep_alive_proposal, ds)
+        .then(() => getPits(pit.dataSource))
+        .catch(() => {
+          toasts.addDanger(
+            i18n.translate('pitManagement.pitTable.addTimeError', {
+              defaultMessage: 'Error while updating PIT object.',
+            })
+          );
+        });
+    };
+
+    let modal;
+
+    if (isAddTimeModalVisible) {
+      const maxTime = moment(pitToAddTime[0].expiry).diff(
+        moment(pitToAddTime[0].creation_time),
+        'hours'
+      );
+      console.log('maxTime', maxTime);
+      const maxTimeExceeded = maxTime >= 24;
+      if (maxTimeExceeded) {
+        modal = (
+          <EuiModal title="Maximum time reached" onClose={closeModal}>
+            <EuiModalHeader>
+              <EuiModalHeaderTitle>Maximum time reached</EuiModalHeaderTitle>
+            </EuiModalHeader>
+            <EuiModalBody>
+              <EuiText>
+                A PIT can be kept for a maximum of 24 hours. You cannot add more time to this PIT.
+                To extend the time, configure point_in_time.max_keep_alive or contact your
+                administrator.
+              </EuiText>
+              <EuiSpacer />
+            </EuiModalBody>
+            <EuiModalFooter>
+              <EuiButton onClick={closeModal} fill>
+                Cancel
+              </EuiButton>
+            </EuiModalFooter>
+          </EuiModal>
+        );
+      } else {
+        modal = (
+          <EuiConfirmModal
+            title="Add Time"
+            onCancel={closeModal}
+            onConfirm={() => {
+              closeModal();
+              addTimeToPit(pitToAddTime[0]);
+              setPitToAddTime([]);
+            }}
+            confirmButtonText="Add time to PIT"
+            cancelButtonText="Cancel"
+          >
+            <EuiText>
+              Add an amount of time to a PIT. This amount must be greater than the keep_alive time
+              (x) and cannot exceed the max_keep_alive time (y). You can configure keep_alive on the
+              PIT object details page.
+            </EuiText>
+            <EuiSpacer />
+            <EuiFormRow>
+              <EuiFlexGroup>
+                <EuiFlexItem>
+                  <EuiFieldNumber placeholder="Hour(s)" onChange={onChangeTimeHr} />
+                </EuiFlexItem>
+                <EuiFlexItem>
+                  <EuiFieldNumber placeholder="Min(s)" onChange={onChangeTimeMin} />
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            </EuiFormRow>
+          </EuiConfirmModal>
+        );
+      }
+    }
+
+    return <div>{modal}</div>;
+  };
+
   const displayDelete = (pit) => {
     setPitsToDelete([pit]);
     setIsModalVisible(true);
+  };
+
+  const displayAddTime = (pit) => {
+    setPitToAddTime([pit]);
+    setIsAddTimeModalVisible(true);
   };
 
   const actions = [
@@ -424,7 +551,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
       description: 'Add Time',
       icon: 'clock',
       type: 'icon',
-      onClick: fetchDataSources,
+      onClick: displayAddTime,
     },
     {
       name: 'Configure PIT',
@@ -725,6 +852,7 @@ const PITTable = ({ history }: RouteComponentProps) => {
             selection={selection}
           />
           <DeleteModal />
+          <AddTimeModal />
         </EuiPageContentBody>
       </EuiPageContent>
       {/* <EuiButton onClick={createPointInTime}>Create PIT</EuiButton>
