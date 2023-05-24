@@ -21,6 +21,7 @@ import {
   EuiHorizontalRule,
   EuiSwitch,
   EuiComboBox,
+  EuiLink
 } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import {
@@ -148,19 +149,19 @@ export async function getIndexPatterns(savedObjectsClient) {
 }
 
 export const PointInTimeCreateForm = ({ history }) => {
-  const [isFlyoutVisible, setIsFlyoutVisible] = useState(false);
-  const [showErrors, setShowErrors] = useState(false);
-  const [keepAliveTime, setKeepAliveTime] = useState('2');
+  const [hourValue, setHourValue] = useState('0');
+  const [minuteValue, setMinuteValue] = useState('5');
+
   const [keepAliveUnit, setKeepAliveUnit] = useState('h');
-  const [makedashboardschecked, setMakedashboardschecked] = useState(false);
-  const [partialfailurechecked, setPartialfailurechecked] = useState(false);
+  const [makedashboardschecked, setMakedashboardschecked] = useState(true);
+  const [partialfailurechecked, setPartialfailurechecked] = useState(true);
   const [loading, setLoading] = useState(true);
 
   const [indexPatterns, setIndexPatterns] = useState([] as PointInTimeFlyoutItem[]);
   const [selectedIndexPattern, setSelectedIndexPattern] = useState(``);
   const [pitName, setPitName] = useState('');
 
-  const [deletepitchecked, setDeletepitchecked] = useState(false);
+  const [deletepitchecked, setDeletepitchecked] = useState(true);
   const [deletepitdashboardchecked, setDeletepitdashboardchecked] = useState(false);
   const [radioIdSelected, setRadioIdSelected] = useState(``);
   const [showIndices, setShowIndices] = useState(false);
@@ -172,6 +173,7 @@ export const PointInTimeCreateForm = ({ history }) => {
 
   const [dataSources, setDataSources] = useState<DataSourceItem[]>([defaultDataSource]);
   const [dataSource, setDataSource] = useState('');
+  const [shouldCreateDisabled, setShouldCreateDisabled] = useState(true);
 
   const [indices, setIndices] = useState([]);
 
@@ -192,6 +194,11 @@ export const PointInTimeCreateForm = ({ history }) => {
   });
 
   useEffect(() => {
+    if ((!selectedIndexOptions || selectedIndexOptions.length == 0) && (!selectedIndexPattern || selectedIndexPattern == ``)) {
+      setShouldCreateDisabled(true);
+    } else {
+      setShouldCreateDisabled(false);
+    }
     (async function () {
       const gettedIndexPatterns = await getIndexPatterns(savedObjects.client);
       // filter the index pattern w.r.t data source selected
@@ -209,6 +216,17 @@ export const PointInTimeCreateForm = ({ history }) => {
       setLoading(false);
     })();
   }, [savedObjects.client, dataSource]);
+
+  useEffect(() => {
+    if (((!selectedIndexOptions || selectedIndexOptions.length == 0) && (!showIndexPatterns)) || (pitName == `` && makedashboardschecked)) {
+      setShouldCreateDisabled(true);
+    } else {
+      debugger;
+      setShouldCreateDisabled(false);
+    }
+  }, [selectedIndexOptions, showIndexPatterns, pitName, makedashboardschecked]);
+
+
 
   const fetchDataSources = () => {
     getDataSources(savedObjects.client)
@@ -231,13 +249,18 @@ export const PointInTimeCreateForm = ({ history }) => {
   };
 
   const createPointInTime = async () => {
-    const keepAlive = keepAliveTime + keepAliveUnit;
+    //doValidations();
+
+    const keepAlive = (60 * parseInt(hourValue) + parseInt(minuteValue)) + "m";
     try {
       if (makedashboardschecked) {
         const dupe = await findByTitle(savedObjects.client, pitName);
         if (dupe) {
           throw new Error(`Duplicate Point in time: ${pitName}`);
         }
+      }
+      if(selectedIndexPattern == `` && selectedIndexOptions.length == 0) {
+        throw new Error(`Select an index pattern or set of indices`)
       }
       await createPit(
         selectedIndexOptions,
@@ -253,7 +276,7 @@ export const PointInTimeCreateForm = ({ history }) => {
         deletepitchecked
       );
 
-      history.push('');
+      history.push('',dataSource);
       toasts.addSuccess('Point in time created successfully');
     } catch (e) {
       toasts.addDanger(e.message);
@@ -281,11 +304,20 @@ export const PointInTimeCreateForm = ({ history }) => {
     } else if (optionId == 'index-option') {
       setShowIndices(true);
       setShowIndexPatterns(false);
+      setSelectedIndexPattern(``);
     }
   };
 
   const onExpirationComboChange = (e) => {
     setKeepAliveUnit(e.target.value);
+  };
+
+  const onHourChange = (e) => {
+    setHourValue(e.target.value);
+  };
+
+  const onMinuteChange = (e) => {
+    setMinuteValue(e.target.value);
   };
 
   const onPartialFailureCheckChange = (e) => {
@@ -298,10 +330,6 @@ export const PointInTimeCreateForm = ({ history }) => {
 
   const onDeletePitCheckboxChange = (e) => {
     setDeletepitchecked(e.target.checked);
-  };
-
-  const onDeletePitDashboardCheckboxChange = (e) => {
-    setDeletepitdashboardchecked(e.target.checked);
   };
 
   console.log('index patterns : ' + showIndexPatterns);
@@ -341,6 +369,7 @@ export const PointInTimeCreateForm = ({ history }) => {
           onChange={handleIndexOnChange}
         />
       </EuiFormRow>
+
     );
   }
   if (showIndexPatterns) {
@@ -420,65 +449,51 @@ export const PointInTimeCreateForm = ({ history }) => {
     <EuiPageContent>
       <EuiTitle size="xs">
         <h4 data-test-subj="expiration">
-          {<FormattedMessage id="pit.expiration.header" defaultMessage="Expiration" />}
+          {<FormattedMessage id="pit.expiration.header" defaultMessage="Time configurations" />}
         </h4>
       </EuiTitle>
 
       <EuiHorizontalRule />
 
       <EuiSpacer size="s" />
-
-      <EuiFlexGroup style={{ maxWidth: 600 }}>
+      <EuiFlexGroup style={{ maxWidth: 800 }}>
         <EuiFlexItem>
-          <EuiFormRow label="Time">
-            <EuiFieldNumber
-              placeholder="Placeholder text"
-              value={keepAliveTime}
-              onChange={onChange}
-            />
-          </EuiFormRow>
-        </EuiFlexItem>
-        <EuiFlexItem>
-          <EuiFormRow label="Timeframe">
-            <EuiSelect
-              options={[
-                {
-                  value: 'h',
-                  text: 'Hour(s)',
-                },
-                {
-                  value: 'm',
-                  text: 'Minute(s)',
-                },
-              ]}
-              value={keepAliveUnit}
-              onChange={onExpirationComboChange}
-            />
-          </EuiFormRow>
-        </EuiFlexItem>
-        <EuiFlexItem grow={false}>
-          <EuiFormRow hasEmptyLabelSpace>
-            <EuiFieldText disabled value="From creation" />
+          <EuiFormRow label="Keep alive">
+            <EuiText size="xs">The keep_alive time is the time a PIT is active. When you query a PIT, you extend its expiration by the keep_alive time.  The keep_alive time cannot exceed X hours. 
+            {' '}
+      <EuiLink href="https://opensearch.org/docs/latest/search-plugins/point-in-time-api/#create-a-pit" target="_blank">
+       Learn more
+      </EuiLink>{' '}
+            </EuiText>
           </EuiFormRow>
         </EuiFlexItem>
       </EuiFlexGroup>
+      <EuiSpacer size="l" />
+
+
+      <EuiFlexGroup style={{ maxWidth: 800 }}>
+        <EuiFlexItem>
+          <EuiFormRow label="Hour(s)"
+            helpText="PITs can only be extended to the max_keep_alive time."
+          >
+            <EuiFieldNumber value={hourValue} placeholder="Hour(s)" onChange={onHourChange} />
+          </EuiFormRow>
+        </EuiFlexItem>
+        <EuiFlexItem>
+          <EuiFormRow
+            label="Min(s)"
+          >
+            <EuiFieldNumber value={minuteValue} placeholder="Min(s)" onChange={onMinuteChange} />
+          </EuiFormRow>
+        </EuiFlexItem>
+      </EuiFlexGroup>
+
       <EuiSpacer size="s" />
 
       <EuiHorizontalRule />
 
       <EuiSpacer size="s" />
-      <EuiCheckbox
-        id={'delete-pit-expiration'}
-        label="Delete this pit at expiration"
-        checked={deletepitchecked}
-        onChange={onDeletePitCheckboxChange}
-      />
-      <EuiCheckbox
-        id={'delete-pit-dashboard-expiration'}
-        label="Delete this dashboard object at expiration"
-        checked={deletepitdashboardchecked}
-        onChange={onDeletePitDashboardCheckboxChange}
-      />
+      
     </EuiPageContent>
   );
 
@@ -486,21 +501,25 @@ export const PointInTimeCreateForm = ({ history }) => {
     <EuiPageContent>
       <EuiTitle size="xs">
         <h4 data-test-subj="Details">
-          {<FormattedMessage id="pit.details.header" defaultMessage="Details" />}
+          {<FormattedMessage id="pit.details.header" defaultMessage="Dashboard PIT configurations" />}
         </h4>
       </EuiTitle>
 
       <EuiHorizontalRule />
 
       <EuiFormRow label="Dashboards availibility">
-        <EuiSwitch
+      <EuiText size="xs">To use this PIT in OpenSearch Dashboards, make it available to Dashboards.</EuiText>
+
+      </EuiFormRow>
+      <EuiSpacer size="l" />
+
+      <EuiSwitch
           label="Make available in dashboards"
           checked={makedashboardschecked}
           onChange={oDashboardSwitchChange}
         />
-      </EuiFormRow>
-
       {makedashboardschecked && (
+        <div>
         <EuiFlexGroup style={{ maxWidth: 800 }}>
           <EuiFlexItem>
             <EuiFormRow hasEmptyLabelSpace>
@@ -515,7 +534,16 @@ export const PointInTimeCreateForm = ({ history }) => {
               <EuiFieldText placeholder="Descriptive name" onChange={onNameChange} />
             </EuiFormRow>
           </EuiFlexItem>
+         
         </EuiFlexGroup>
+        <EuiCheckbox
+        id={'delete-pit-expiration'}
+        label="Delete this dashboard object at expiration"
+        checked={deletepitchecked}
+        onChange={onDeletePitCheckboxChange}
+      />
+        </div>
+        
       )}
     </EuiPageContent>
   );
@@ -524,7 +552,7 @@ export const PointInTimeCreateForm = ({ history }) => {
     <EuiPageContent>
       <EuiTitle size="xs">
         <h4 data-test-subj="Additional configurations">
-          {<FormattedMessage id="pit.details.config" defaultMessage="Additional configurations" />}
+          {<FormattedMessage id="pit.details.config" defaultMessage="Additional configuration options" />}
         </h4>
       </EuiTitle>
 
@@ -547,7 +575,7 @@ export const PointInTimeCreateForm = ({ history }) => {
         <EuiButton onClick={() => history.push('')}>Cancel</EuiButton>
       </EuiFlexItem>
       <EuiFlexItem grow={false}>
-        <EuiButton onClick={createPointInTime} fill={true}>
+        <EuiButton onClick={createPointInTime} fill={true} disabled={shouldCreateDisabled}>
           Create PIT
         </EuiButton>
       </EuiFlexItem>

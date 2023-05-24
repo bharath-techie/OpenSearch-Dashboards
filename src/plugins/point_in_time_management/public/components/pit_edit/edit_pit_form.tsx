@@ -263,7 +263,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
             label="PIT name"
             helpText="Specify a unique and descriptive name that is easy to recognize."
           >
-            <EuiFieldText name="pit-name" onChange={this.onChangePitName} />
+            <EuiFieldText name="pit-name" value={this.props.existingPointInTime.name} onChange={this.onChangePitName} />
           </EuiFormRow>
         </EuiDescribedFormGroup>
         <EuiDescribedFormGroup
@@ -329,7 +329,7 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
                   label="Point in time name"
                   helpText="Specify a unique and descriptive name that is easy to recognize."
                 >
-                  <EuiFieldText placeholder="Descriptive name" onChange={this.onChangePitName} />
+                  <EuiFieldText placeholder="Descriptive name" value={this.props.existingPointInTime.name} onChange={this.onChangePitName} />
                 </EuiFormRow>
               </EuiFlexItem>
             </EuiFlexGroup>
@@ -375,10 +375,10 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
               <EuiFormRow>
                 <EuiFlexGroup>
                   <EuiFlexItem>
-                    <EuiFieldNumber placeholder="Hour(s)" onChange={this.onChangeTimeHr} />
+                    <EuiFieldNumber value={this.state.AddTimeHr} min={0} max={23} placeholder="Hour(s)" onChange={this.onChangeTimeHr} />
                   </EuiFlexItem>
                   <EuiFlexItem>
-                    <EuiFieldNumber placeholder="Min(s)" onChange={this.onChangeTimeMin} />
+                    <EuiFieldNumber value={this.state.AddTimeMin} min={0} max={59} placeholder="Min(s)" onChange={this.onChangeTimeMin} />
                   </EuiFlexItem>
                 </EuiFlexGroup>
               </EuiFormRow>
