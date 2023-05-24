@@ -73,13 +73,16 @@ export interface PitItem {
   expiry: number;
 }
 
-const PITTable = ({ history }: RouteComponentProps) => {
+const PITTable = (props: RouteComponentProps) => {
   const {
     setBreadcrumbs,
     savedObjects,
     notifications: { toasts },
     http,
   } = useOpenSearchDashboards<PointInTimeManagementContext>().services;
+
+  const history = props.history;
+  const dataSourceProp = props.location && props.location.state;
 
   useMount(() => {
     setBreadcrumbs(getListBreadcrumbs());
@@ -121,6 +124,11 @@ const PITTable = ({ history }: RouteComponentProps) => {
               .concat([defaultDataSource])
               .sort((a, b) => a.sort.localeCompare(b.sort))
           );
+          console.log('dataSourceprop', dataSourceProp);
+          const ds = dataSourceProp
+            ? fetchedDataSources.filter((x) => x.id === dataSourceProp)[0].title
+            : '';
+          setDataSource(ds);
         }
       })
       .catch(() => {

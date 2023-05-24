@@ -45,7 +45,6 @@ export const PITEdit = (props) => {
   const pit = props.location && props.location.state;
   console.log(pit);
   console.log(props.location.state);
-  debugger;
   const [pitSavedObject, setPitSavedObject] = useState<PointInTimeAttributes>(
     defaultPitSavedObject
   );
@@ -103,7 +102,7 @@ export const PITEdit = (props) => {
       console.log(attributes.pit_id, new_keep_alive_proposal);
       await services.addPitTime(attributes.pit_id, new_keep_alive_proposal, pit.dataSourceId);
       await updatePointInTimeById(savedObjects.client, attributes.id, attributes);
-      props.history.push('/');
+      props.history.push('/', pit.dataSourceId);
     } else {
       console.log('This is not saved object', attributes);
       if (attributes.addtime > 0) {
@@ -150,7 +149,7 @@ export const PITEdit = (props) => {
       //   ['opensearch_dashboards_sample_data_ecommerce'],
       //   'opensearch_dashboards_sample_data_ecommerce', indexPatterns, dataSource, data,
       //   http, keepAlive, makedashboardschecked, pitName, savedObjects, deletepitchecked)
-      props.history.push('/');
+      props.history.push('/', pit.dataSourceId);
     }
   };
 
