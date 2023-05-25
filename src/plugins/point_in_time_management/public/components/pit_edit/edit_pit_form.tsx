@@ -281,15 +281,9 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
             <>
               <EuiCheckbox
                 id="pit-id"
-                label="Delete this PIT at expiration"
+                label="Delete dependent saved objects at PIT expiration"
                 checked={this.state.checked}
                 onChange={this.onChangeDeleteObject}
-              />
-              <EuiCheckbox
-                id="pit-id"
-                label="Delete dependent saved objects at PIT expiration"
-                onChange={(e) => this.onChange(e)}
-                disabled={true}
               />
             </>
           </EuiFormRow>
@@ -329,11 +323,33 @@ export class EditPitForm extends React.Component<EditPitProps, EditPitState> {
                   label="Point in time name"
                   helpText="Specify a unique and descriptive name that is easy to recognize."
                 >
-                  <EuiFieldText placeholder="Descriptive name" value={this.props.existingPointInTime.name} onChange={this.onChangePitName} />
+                  <EuiFieldText placeholder="Descriptive name" value={this.state.name} onChange={this.onChangePitName} />
                 </EuiFormRow>
               </EuiFlexItem>
             </EuiFlexGroup>
           )}
+        </EuiDescribedFormGroup>
+        <EuiDescribedFormGroup
+          title={<h3>Post-expiration actions</h3>}
+          description={
+            <p>
+              PIT data is lost once it expires you have the option to keep the PIT metadata after
+              after expiration. expiration. expiration. expiration. expiration. You can also choose
+              to keep the Dashboard Object expiration. This object will be converted to an Index
+              Pattern and Pattern and it will reference data.
+            </p>
+          }
+        >
+          <EuiFormRow>
+            <>
+              <EuiCheckbox
+                id="pit-id"
+                label="Delete dependent saved objects at PIT expiration"
+                checked={this.state.checked}
+                onChange={this.onChangeDeleteObject}
+              />
+            </>
+          </EuiFormRow>
         </EuiDescribedFormGroup>
       </EuiForm>
     );

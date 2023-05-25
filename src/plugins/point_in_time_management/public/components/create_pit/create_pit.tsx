@@ -476,14 +476,14 @@ export const PointInTimeCreateForm = ({ history }) => {
           <EuiFormRow label="Hour(s)"
             helpText="PITs can only be extended to the max_keep_alive time."
           >
-            <EuiFieldNumber value={hourValue} placeholder="Hour(s)" onChange={onHourChange} />
+            <EuiFieldNumber value={hourValue}  min={0} max={23} placeholder="Hour(s)" onChange={onHourChange} />
           </EuiFormRow>
         </EuiFlexItem>
         <EuiFlexItem>
           <EuiFormRow
             label="Min(s)"
           >
-            <EuiFieldNumber value={minuteValue} placeholder="Min(s)" onChange={onMinuteChange} />
+            <EuiFieldNumber value={minuteValue}  min={0} max={59} placeholder="Min(s)" onChange={onMinuteChange} />
           </EuiFormRow>
         </EuiFlexItem>
       </EuiFlexGroup>
